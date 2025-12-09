@@ -1,0 +1,99 @@
+1. Módulo Institucional (Landing Page)
+O rosto do salão. É a primeira coisa que a cliente vê.
+
+Página Inicial (Home): Landing page completa e responsiva.
+
+Conteúdo:
+
+	História da "Eduarda" (proprietária) + Certificações.
+
+	Fotos gerais do estabelecimento.
+
+	Endereço com mapa (integração Google Maps) e Contato.
+
+	Vitrine de Serviços:
+
+	Lista de Procedimentos com fotos reais de antes/depois.
+
+	Descrição detalhada e Lista de Preços visível.
+
+	Equipe: Lista de funcionários com nome, foto e especialização.
+
+2. Módulo de Agendamento (Cliente)
+O coração do sistema.
+
+	Calendário de Disponibilidade: Visualização de datas e horários livres.
+
+	Agendar Horário: Interface para selecionar Serviço + Profissional + Data/Hora.
+
+	Sincronização (Cliente): Opção para adicionar o agendamento ao calendário do celular (Google Calendar/Apple iCal - via arquivo .ics ou link).
+
+3. Módulo de Gestão (Admin/Dona)
+Onde a mágica do controle acontece.
+
+	Cadastro de Clientes: Nome completo, celular (WhatsApp).
+
+	Cadastro de Funcionários: Nome, celular, especialização.
+
+	Cadastro de Serviços: Nome, preço, descrição.
+
+	Cadastro de Produtos: Controle de estoque (produtos para venda ou uso interno).
+
+	Agenda do Dia: Visão rápida de todos os clientes do dia.
+
+4. Módulo Financeiro & Relatórios
+O controle do dinheiro.
+
+	Controle de Receita: Relatórios semanais e mensais de entrada.
+
+	Meta Financeira: Visualização gráfica da meta (R$ 4.000 - 5.000) vs. Realizado (Barra de progresso).
+
+	5. Notificações & Automação
+	Lembrete de Agendamento: Envio de mensagem (WhatsApp) 1 dia antes pedindo confirmação.
+
+	Relatório Diário: Enviar a "Agenda do dia" no WhatsApp da dona/funcionários automaticamente.
+
+Análise e Complementos (O que falta para dar certo)
+Para criar isso no Django, notei alguns buracos na lógica que precisamos preencher. Aqui estão minhas sugestões técnicas:
+
+	A. O "Pulo do Gato" no Agendamento: Duração do Serviço
+	Você listou "Serviços" com nome e preço, mas esqueceu a Duração.
+
+	Por que é necessário? Se a cliente agendar "Corte" (30min) às 14:00, o sistema precisa saber que o horário das 14:30 está livre. Se for "Tintura" (2h), o sistema bloqueia até as 16:00.
+
+	Sugestão: Adicionar o campo duracao no Model de Serviço.
+
+	B. Status do Agendamento
+	Um agendamento não é apenas "marcado". Ele tem estados.
+
+	Sugestão de Status: Pendente (marcou no site), Confirmado (respondeu zap), Concluído (foi atendido e pagou), Cancelado e No-Show (não compareceu). Isso é essencial para o relatório financeiro ser real.
+
+	C. Gestão de Caixa (Entradas vs. Saídas)
+	Você mencionou "Gerenciar o Caixa" e "Meta", mas só listou receitas.
+
+	Problema: Se a Eduarda vender R$ 5.000,00 mas gastar R$ 2.000,00 em produtos e R$ 1.000,00 em aluguel/luz, o lucro real é menor.
+
+	Sugestão: Criar uma tabela de Despesas simples (Contas a pagar, reposição de produto) para ter o lucro líquido no relatório.
+
+	D. Autenticação (Login)
+	Como a cliente agenda? Ela precisa criar conta (Login/Senha) ou apenas informar o telefone na hora de agendar?
+
+	Sugestão: Para começar rápido, faça agendamento "Guest" (convidado). A cliente escolhe o horário, bota Nome/Zap e o sistema agenda. Login cria barreira de entrada.
+
+	E. Integração WhatsApp
+	Nota Técnica: Enviar mensagens automáticas pelo WhatsApp (API oficial) é pago ou complexo (Meta for Developers).
+
+Alternativa Grátis (MVP): O sistema gera um link wa.me/...?text=ola... que a dona clica e envia a confirmação manual, OU usar uma API não-oficial (tipo wppconnect) se você tiver conhecimento em Node.js/Python scripts, mas cuidado com bloqueios.
+
+Resumo da Estrutura de Dados (Models Sugeridos)
+Para o Django, eu visualizo o início do models.py assim:
+
+	Servico: nome, preco, duracao, descricao, foto.
+
+	Profissional: nome, especializacao, foto.
+
+	Cliente: nome, telefone (Unique).
+
+	Agendamento: cliente (FK), profissional (FK), servico (FK), data_hora_inicio, data_hora_fim, status.
+
+	TransacaoFinanceira: tipo (receita/despesa), valor, descricao, data.
