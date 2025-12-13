@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User, Group
-from .models import Usuario, ClienteProfile, Funcionario, Servico, Agendamento, JornadaTrabalho
+from .models import *
 
 @admin.register(Usuario)
 class CustomUserAdmin(UserAdmin):
@@ -28,4 +28,4 @@ class JornadaTrabalhoAdmin(admin.ModelAdmin):
         'funcionario__usuario__email', 
         'funcionario__usuario__first_name',
     )
-    
+admin.site.register(TransicaoFinanceira)

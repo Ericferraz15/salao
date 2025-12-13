@@ -1,0 +1,234 @@
+
+{% load static %}<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eduarda Ferraz - Salão Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'staticCliente/home.css' %}">
+</head>
+
+<body>
+    <!-- Navegação Superior -->
+    <nav class="top-nav">
+        <div class="container nav-container">
+            <div class="logo">Eduarda<span>Ferraz</span></div>
+            
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home">Início</a></li>
+                <li><a href="#about">Sobre Mim</a></li>
+                <li><a href="#services">Serviços</a></li>
+                <li><a href="#contact">Contato</a></li>
+                <li><a href="#address">Endereço</a></li>
+            </ul>
+            
+            <div class="auth-buttons">
+                <a href="#" class="btn-nav btn-login">Login</a>
+                <a href="#" class="btn-nav btn-register">Cadastro</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Capa / Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>Transforme sua Beleza, Realce sua Essência</h1>
+            <p>Descubra os melhores tratamentos estéticos em um ambiente exclusivo e acolhedor. Agende sua experiência personalizada.</p>
+            <a href="#services" class="btn-hero">Agendar Agora</a>
+        </div>
+    </section>
+
+    <!-- Sobre Mim -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="section-header">
+                <h2>Sobre Mim</h2>
+            </div>
+            <div class="about-content">
+                <div class="about-image">
+                    <img src="{% static 'images/dona.jpg' %}" alt=Foto da Especialista em Beleza>
+                </div>
+                <div class="about-text">
+                    <h3>Especialista em Nail desinger</h3>
+                    <p>Há 3 anos, embarquei nessa jornada de transformar unhas em verdadeiras obras de arte, e desde então, cada atendimento tem sido um prazer enorme.
+                    Para mim, cuidar das suas unhas vai muito além da técnica. É sobre te proporcionar um momento de pausa, de mimo e de cuidado, onde você pode relaxar e sair com a autoestima renovada</p>
+
+                    <a href="#contact" class="btn-service">Entre em Contato</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Serviços -->
+    <section class="services" id="services">
+        <div class="container">
+            <div class="section-header">
+                <h2>Nossos Serviços</h2>
+            </div>
+            <div class="services-grid">
+                <!-- Serviço 1 -->
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Corte de Cabelo">
+                    </div>
+                    <div class="service-content">
+                        <h3>Corte e Estilização</h3>
+                        <p>Corte personalizado conforme seu tipo de rosto e estilo, com finalização profissional.</p>
+                        <div class="service-price">R$ 120,00</div>
+                        <a href="#" class="btn-service">Agendar</a>
+                    </div>
+                </div>
+                
+                <!-- Serviço 2 -->
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="https://images.unsplash.com/photo-1556228578-9c360e1d8d34?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Coloração">
+                    </div>
+                    <div class="service-content">
+                        <h3>Coloração Profissional</h3>
+                        <p>Técnicas avançadas de coloração com produtos de alta qualidade e baixa agressividade.</p>
+                        <div class="service-price">R$ 180,00</div>
+                        <a href="#" class="btn-service">Agendar</a>
+                    </div>
+                </div>
+                
+                <!-- Serviço 3 -->
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="https://images.unsplash.com/photo-1607772588355-bdc6d6b013c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Tratamentos Faciais">
+                    </div>
+                    <div class="service-content">
+                        <h3>Tratamentos Faciais</h3>
+                        <p>Limpeza de pele, hidratação profunda e terapias rejuvenescedoras para um rosto radiante.</p>
+                        <div class="service-price">R$ 150,00</div>
+                        <a href="#" class="btn-service">Agendar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contato e Endereço -->
+    <section id="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2>Contato e Endereço</h2>
+            </div>
+            <div class="contact-wrapper">
+                <!-- Contato -->
+                <div class="contact-info">
+                    <h3>Entre em Contato</h3>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="contact-text">
+                            <h4>Telefone</h4>
+                            <p>(11) 99999-9999</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="contact-text">
+                            <h4>E-mail</h4>
+                            <p>contato@belezaelegante.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="contact-text">
+                            <h4>Horário de Funcionamento</h4>
+                            <p>Segunda a Sexta: 9h às 20h</p>
+                            <p>Sábado: 9h às 18h</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Endereço -->
+                <div class="address-info" id="address">
+                    <h3>Nosso Endereço</h3>
+                    <div class="address-item">
+                        <div class="address-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="address-text">
+                            <h4>Localização</h4>
+                            <p>Av. Paulista, 1000 - Bela Vista</p>
+                            <p>São Paulo - SP, 01310-100</p>
+                        </div>
+                    </div>
+                    <div class="address-item">
+                        <div class="address-icon">
+                            <i class="fas fa-subway"></i>
+                        </div>
+                        <div class="address-text">
+                            <h4>Metrô Mais Próximo</h4>
+                            <p>Estação Paulista (Linha 2 - Verde)</p>
+                            <p>5 minutos a pé</p>
+                        </div>
+                    </div>
+                    <div class="address-item">
+                        <div class="address-icon">
+                            <i class="fas fa-car"></i>
+                        </div>
+                        <div class="address-text">
+                            <h4>Estacionamento</h4>
+                            <p>Convênio com estacionamento</p>
+                            <p>3 horas gratuitas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-about">
+                    <div class="footer-logo">Beleza<span>Elegante</span></div>
+                    <p>Um espaço dedicado à beleza e ao bem-estar, onde cada cliente recebe atenção personalizada e tratamentos de alta qualidade.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Links Rápidos</h4>
+                    <ul>
+                        <li><a href="#home">Início</a></li>
+                        <li><a href="#about">Sobre Mim</a></li>
+                        <li><a href="#services">Serviços</a></li>
+                        <li><a href="#contact">Contato</a></li>
+                        <li><a href="#address">Endereço</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-newsletter">
+                    <h4>Novidades</h4>
+                    <p>Cadastre-se para receber promoções exclusivas e dicas de beleza.</p>
+                    <a href="#" class="btn-service" style="display: inline-block; margin-top: 15px;">Cadastrar</a>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2023 Beleza Elegante. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="{% static 'gestao/JS/homeJS.js' %}"></script>
+</body>
+</html>

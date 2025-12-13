@@ -53,20 +53,7 @@ O controle do dinheiro.
 
 	Relatório Diário: Enviar a "Agenda do dia" no WhatsApp da dona/funcionários automaticamente.
 
-Análise e Complementos (O que falta para dar certo)
-Para criar isso no Django, notei alguns buracos na lógica que precisamos preencher. Aqui estão minhas sugestões técnicas:
 
-	A. O "Pulo do Gato" no Agendamento: Duração do Serviço
-	Você listou "Serviços" com nome e preço, mas esqueceu a Duração.
-
-	Por que é necessário? Se a cliente agendar "Corte" (30min) às 14:00, o sistema precisa saber que o horário das 14:30 está livre. Se for "Tintura" (2h), o sistema bloqueia até as 16:00.
-
-	Sugestão: Adicionar o campo duracao no Model de Serviço.
-
-	B. Status do Agendamento
-	Um agendamento não é apenas "marcado". Ele tem estados.
-
-	Sugestão de Status: Pendente (marcou no site), Confirmado (respondeu zap), Concluído (foi atendido e pagou), Cancelado e No-Show (não compareceu). Isso é essencial para o relatório financeiro ser real.
 
 	C. Gestão de Caixa (Entradas vs. Saídas)
 	Você mencionou "Gerenciar o Caixa" e "Meta", mas só listou receitas.
