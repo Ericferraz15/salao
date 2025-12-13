@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Novo Agendamento</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{% static 'staticCliente/style.css' %}">
+</head>
+<body>
+
+    <div class="content-wrapper">
+        <h1>Agendar Novo Serviço</h1>
+
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %} <h3>Selecione o Serviço e o Profissional</h3>
+            
+            <label for="id_servico">Serviço:</label>
+            <select name="servicoId" id="id_servico" required>
+                <option value="">-- Escolha o Serviço --</option>
+                {% for servico in servicos %}
+                    <option value="{{ servico.pk }}">{{ servico.nome }} ({{ servico.duracao_minutos }} min)</option>
+                {% endfor %}
+            </select>
+
+            <label for="id_profissional">Profissional:</label>
+            <select name="profissionalId" id="id_profissional" required>
+                <option value="">-- Escolha o Profissional --</option>
+                {% for funcionario in funcionarios %}
+                    <option value="{{ funcionario.pk }}">
+                        {{ funcionario.usuario.first_name }} {{ funcionario.usuario.last_name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="id_hora_de_inicio">Data e Hora de Início:</label>
+            <input type="datetime-local" name="hora_de_inicio" id="id_hora_de_inicio" required>
+
+            <button type="submit">Confirmar Agendamento</button>
+        </form>
+        
+        <p style="text-align: center; margin-top: 20px;"><a href="{% url 'home' %}">Voltar para Home</a></p>
+    </div>
+
+</body>
+</html>

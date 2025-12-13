@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro de Cliente</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{% static 'staticCliente/style.css' %}">
+</head>
+<body>
+    <div class="registration-container">
+        <h1>Criar Conta de Cliente</h1>
+        <p>Preencha os dados para se cadastrar e começar a agendar.</p>
+
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            
+            {{ form.as_p }} 
+            
+            <button type="submit">Cadastrar e Entrar</button>
+        </form>
+        
+        <hr>
+        <p style="text-align: center;">Já tem uma conta? <a href="{% url 'login_cliente' %}">Faça Login aqui</a>.</p>
+    </div>
+</body>
+</html>

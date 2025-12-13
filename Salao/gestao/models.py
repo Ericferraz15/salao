@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from .constants import STATUS_CHOICES, DIAS_SEMANA
+from .utils.constants import STATUS_CHOICES, DIAS_SEMANA
 
 
 class Usuario(AbstractUser):
@@ -158,6 +158,7 @@ class Agendamento(models.Model):
         return f"Agendamento de {self.cliente} com {self.profissional} para {self.servico} em {self.data_hora_inicio}"
 
 class JornadaTrabalho(models.Model):
+
     funcionario = models.ForeignKey(
         Funcionario,
         on_delete=models.CASCADE,
@@ -181,3 +182,63 @@ class JornadaTrabalho(models.Model):
 
     def __str__(self):
         return f"{self.funcionario.usuario.get_full_name()} - {self.get_dia_da_semana_display()}"# type: ignore
+    
+class Produtos(models.Model):
+    nome = models.CharField(
+        max_length = 100,
+        verbose_name = "Nome do Produto"
+    )
+    
+    descricao = models.TextField(
+        verbose_name = "Descrição do Produto"
+    )
+    
+    preco = models.DecimalField(
+        max_digits = 10,
+        decimal_places = 2,
+        verbose_name = "Preço (R$)"
+    )
+    
+    quantidade_estoque = models.PositiveIntegerField(
+        verbose_name = "Quantidade em Estoque"
+    )
+
+    estoque_minimo = models.PositiveIntegerField(
+        verbose_name = "Estoque Mínimo"
+    )
+
+    class Meta:
+        verbose_name = "Produto"
+        verbose_name_plural = "Produtos"
+
+    def __str__(self):
+        return self.nome
+    
+class TransicaoFinanceira(models.Model):
+    tipo = models.CharField(
+        max_length = 10,
+        choices = [('ENTRADA', 'Entrada'), ('SAIDA', 'Saída')],
+        verbose_name = "Tipo de Transição"
+    )
+    
+    valor = models.DecimalField(
+        max_digits = 10,
+        decimal_places = 2,
+        verbose_name = "Valor (R$)"
+    )
+    
+    data_hora = models.DateTimeField(
+        auto_now_add = True,
+        verbose_name = "Data e Hora"
+    )
+    
+    descricao = models.TextField(
+        verbose_name = "Descrição"
+    )
+
+    class Meta:
+        verbose_name = "Transição Financeira"
+        verbose_name_plural = "Transições Financeiras"
+    
+    def __str__(self):
+        return f"{self.tipo} - R$ {self.valor} em {self.data_hora}"
