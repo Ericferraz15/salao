@@ -1,10 +1,11 @@
 from django.contrib import messages
 from datetime import timedelta, datetime
 from django.core.exceptions import ValidationError
-from ..services.agendaServices import criar_agendamento
+from ..services.agendaServices import criar_agendamento, listar_agendamentos, cancelar_agendamento
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.shortcuts import render, redirect
-from ..models import ClienteProfile, Funcionario, Servico
+from ..models import *
 
 # @login_required #type: ignore
 def criar_agendamento_Controller(request):
@@ -18,10 +19,9 @@ def criar_agendamento_Controller(request):
             cliente = ClienteProfile.objects.get(usuario=request.user).pk
             criar_agendamento(profissionalId=profissional, servicoId=servico, clienteId=cliente, hora_de_inicio=hora_de_inicio)
             messages.success(request, "Agendamento criado com sucesso.")
-            return redirect('home')
+            return redirect('listar_agendamentos_controller')
         except ValidationError as error:
             messages.error(request, f"Erro ao criar agendamento: {error.message}")
-            return redirect('home')   
 
     if request.method == 'GET':
         funcionarios = Funcionario.objects.all()
@@ -31,4 +31,25 @@ def criar_agendamento_Controller(request):
             'servicos': servicos,
         }
         return render(request, 'templateCliente/agendamento/criar_agendamento.html', context=context)
-        
+
+
+# @login_required #type: ignore
+def listar_agendamentos_controller(request):
+    cliente = request.user.id
+    agendamentos = listar_agendamentos(clienteId=cliente)
+    context = {
+        'agendamentos': agendamentos
+    }
+    return render(request, 'templateCliente/agendamento/listar_agendamento.html', context=context)
+
+
+# @login_required #type: ignore
+@require_POST
+def cancelar_agendamento_controller(request, agendamento_ID):
+    try:
+        message  = cancelar_agendamento(agendamentoId=agendamento_ID)
+        messages.success(request, message)
+
+    except ValidationError as error:
+        messages.error(request, f"Erro ao cancelar agendamento: {error.message}")
+    return redirect('listar_agendamentos_controller')

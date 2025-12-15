@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}Eduarda Ferraz - Salão Premium{% endblock %}</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'staticCliente/home.css' %}">
+
+    {% block extra_head %}
+    {% endblock %}
+</head>
+
+<body>
+
+    <nav class="top-nav">
+        <div class="container nav-container">
+            <div class="logo">Eduarda<span>Ferraz</span></div>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="auth-buttons">
+                {% if user.is_authenticated %}
+                <a href="{% url 'listar_agendamentos_controller' %}" class="btn-nav btn-login">Meus Agendamentos</a>
+                {% else %}
+                <a href="{% url 'cadastro_cliente' %}" class="btn-nav btn-register">Perfil</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-about">
+                    <div class="footer-logo">Eduarda<span>Ferraz</span></div>
+                    <div class="social-links">
+                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+
+
+            <div class="copyright">
+                <p>&copy; 2025 Eric Ferraz. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+    <script src="{% static 'gestao/JS/homeJS.js' %}"></script>
+
+    {% block extra_scripts %}
+    {% endblock %}
+</body>
+
+</html>

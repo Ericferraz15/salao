@@ -1,0 +1,230 @@
+/* ==================================== */
+/* 0. ESTILOS GLOBAIS DA PÁGINA (LISTAGEM) */
+/* ==================================== */
+
+/* Adiciona um padding superior paa compensar a navbar fixa */
+.container.my-5 {
+    padding-top: 100px; 
+    padding-bottom: 60px;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 50px;
+    font-size: 3em;
+    color: var(--primary-mauve-dark);
+}
+
+/* ==================================== */
+/* 1. MENSAGENS E ALERTAS */
+/* ==================================== */
+.messages-container {
+    max-width: 600px;
+    margin: 0 auto 30px;
+}
+
+.alert {
+    padding: 15px 25px;
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+    font-weight: 500;
+    font-size: 1em;
+    border: none;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* ==================================== */
+/* 2. CARTÕES DE AGENDAMENTO (appointment-card) */
+/* ==================================== */
+.appointment-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30px;
+    background-color: var(--neutral-light);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-subtle);
+    border-left: 5px solid; /* Linha lateral para status */
+    transition: var(--transition-smooth);
+}
+
+.appointment-card:hover {
+    box-shadow: var(--shadow-elevated);
+    transform: translateY(-5px);
+}
+
+/* Estilo para Agendamentos Futuros (Ativos) */
+.appointment-card.status-future {
+    border-left-color: var(--primary-mauve);
+}
+
+/* Estilo para Agendamentos Passados (Histórico) */
+.appointment-card.status-past {
+    border-left-color: var(--neutral-gray);
+    opacity: 0.7;
+}
+
+
+/* Detalhes do Agendamento */
+.appointment-details {
+    flex-grow: 1;
+}
+
+.service-title {
+    font-size: 1.6em;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.datetime-info,
+.professional-info {
+    font-size: 1em;
+    color: var(--text-medium);
+    margin-bottom: 4px;
+}
+
+.datetime-info strong,
+.professional-info strong {
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+/* ==================================== */
+/* 3. STATUS LABEL */
+/* ==================================== */
+.status-label {
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 50px;
+    font-size: 0.9em;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.label-future {
+    background-color: var(--primary-mauve);
+    color: var(--text-light);
+}
+
+.label-past {
+    background-color: var(--neutral-gray);
+    color: var(--text-medium);
+}
+
+/* ==================================== */
+/* 4. BOTÕES DE AÇÃO */
+/* ==================================== */
+.action-buttons {
+    flex-shrink: 0;
+    margin-left: 30px;
+}
+
+.btn-cancel {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 50px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+/* Cor do botão de cancelar (Vermelho suave) */
+.btn-danger {
+    background-color: #e03f5d; /* Vermelho mais suave que o padrão */
+    color: var(--text-light);
+    box-shadow: 0 4px 10px rgba(224, 63, 93, 0.2);
+}
+
+.btn-danger:hover {
+    background-color: #c93551;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(224, 63, 93, 0.3);
+}
+
+.text-muted {
+    color: var(--text-medium) !important;
+    font-style: italic;
+}
+
+
+/* ==================================== */
+/* 5. MENSAGEM DE NENHUM AGENDAMENTO */
+/* ==================================== */
+.no-appointments-message {
+    text-align: center;
+    padding: 80px 40px;
+    background-color: var(--neutral-light);
+    border: 2px solid var(--accent-rosegold-light);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-subtle);
+}
+
+.no-appointments-message h2 {
+    color: var(--primary-mauve-dark);
+    font-size: 2.2em;
+    margin-bottom: 20px;
+}
+
+.no-appointments-message p {
+    font-size: 1.1em;
+    margin-bottom: 30px;
+}
+
+.no-appointments-message .btn-primary {
+    /* Reutiliza o estilo do botão de serviço para consistência */
+    display: inline-block;
+    padding: 15px 35px;
+    background: var(--gradient-mauve);
+    color: var(--text-light);
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition-smooth);
+    border: none;
+}
+
+.no-appointments-message .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(176, 106, 179, 0.3);
+}
+
+/* ==================================== */
+/* 6. RESPONSIVIDADE */
+/* ==================================== */
+@media (max-width: 768px) {
+    .page-header {
+        font-size: 2.2em;
+        margin-bottom: 30px;
+    }
+    
+    .appointment-card {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 20px;
+    }
+    
+    .service-title {
+        font-size: 1.4em;
+    }
+    
+    .action-buttons {
+        margin-top: 15px;
+        margin-left: 0;
+        width: 100%;
+        text-align: center;
+    }
+
+    .btn-cancel {
+        width: 100%;
+        max-width: 300px;
+    }
+}
