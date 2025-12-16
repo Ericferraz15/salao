@@ -76,10 +76,10 @@
             </div>
             <div class="services-grid">
                 <!-- Serviço 1 -->
-                <div class="service-card">
+                <div class="service-card1">
                     <div class="service-image">
-                        <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                            alt="Corte de Cabelo">
+                        <img src="{% static 'images/fibraDeVidro.jpg' %}"
+                            alt="Corte de Cabelo" id="card1">
                     </div>
                     <div class="service-content">
                         <h3>Corte e Estilização</h3>
@@ -89,10 +89,10 @@
                 </div>
 
                 <!-- Serviço 2 -->
-                <div class="service-card">
+                <div class="service-card2">
                     <div class="service-image">
-                        <img src="https://images.unsplash.com/photo-1556228578-9c360e1d8d34?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                            alt="Coloração">
+                        <img src="{% static 'images/esmaltacao.jpg' %}"
+                            alt="Coloração" id="card2">
                     </div>
                     <div class="service-content">
                         <h3>Coloração Profissional</h3>
@@ -102,10 +102,10 @@
                 </div>
 
                 <!-- Serviço 3 -->
-                <div class="service-card">
+                <div class="service-card3">
                     <div class="service-image">
-                        <img src="https://images.unsplash.com/photo-1607772588355-bdc6d6b013c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                            alt="Tratamentos Faciais">
+                        <img src="{% static 'images/banho.jpg' %}"
+                            alt="Tratamentos Faciais" id="card3">
                     </div>
                     <div class="service-content">
                         <h3>Tratamentos Faciais</h3>
@@ -129,46 +129,62 @@
                     <h3>Entre em Contato</h3>
                     <div class="contact-item">
                         <div class="contact-icon">
-                            <i class="fas fa-phone"></i>
+                            <img src="{% static 'images/logowhats.png' %}" alt="WhatsApp" class="icon-whatsapp" style="width: 40px; height: 40px;
+                                position: relative;">
                         </div>
                         <div class="contact-text,">
                             <h4>Telefone</h4>
-                            <a href="https://wa.me/5541998317720?text=Tenho%20interesse%20no%20seu%20servi%C3%A7o" class="link-whatsapp">
+                            <a href="https://wa.me/5541998317720?text=Tenho%20interesse%20no%20seu%20servi%C3%A7o"
+                                class="link-icon">
                                 (41) 99831-7720
                             </a>
                         </div>
                     </div>
                     <div class="contact-item">
                         <div class="contact-icon">
-                            <i class="fas fa-envelope"></i>
+                            <img src="{% static 'images/logoemail.png' %}" alt="E-mail" class="icon-email">
                         </div>
                         <div class="contact-text">
                             <h4>E-mail</h4>
-                            <p>contato@Eduarda.com</p>
+                            <a href="mailto:contato@Eduarda.com" class="link-icon">contato@Eduarda.com</a>
                         </div>
                     </div>
                     <div class="contact-item">
                         <div class="contact-icon">
-                            <i class="fas fa-clock"></i>
+                            <img src="{% static 'images/logoinsta.png' %}" alt="Instagram" class="icon-instagram">
                         </div>
                         <div class="contact-text">
-                            <h4>Horário de Funcionamento</h4>
-                            <p>Segunda a Sexta: 9h às 20h</p>
-                            <p>Sábado: 9h às 18h</p>
+                            <h4>Instagram</h4>
+                            <a href="https://www.instagram.com/duda_designer.nails/" class="link-icon">
+                                @duda_designer.nails
+                            </a>
                         </div>
                     </div>
+
                 </div>
 
                 <div class="address-info" id="address">
                     <h3>Nosso Endereço</h3>
                     <div class="address-item">
                         <div class="address-icon">
-                            <i class="fas fa-map-marker-alt"></i>
+                            <img src="{% static 'images/logomapa.png' %}" alt="Endereço" class="icon-endereco">
                         </div>
                         <div class="address-text">
                             <h4>Localização</h4>
                             <p>Rua Schirlei Solange Mantovani, 485, Cidade Industrial, Curitiba PR, 81305-000, Brasil
                             </p>
+                        </div>
+
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <img src="{% static 'images/logorelogio.png' %}" alt="horario-funcionamento"
+                                class="icon-horario">
+                        </div>
+                        <div class="contact-text">
+                            <h4>Horário de Funcionamento</h4>
+                            <p>Segunda a Sexta: 9h às 20h</p>
+                            <p>Sábado: 9h às 18h</p>
                         </div>
                     </div>
                     <div class="address-item">
@@ -185,10 +201,16 @@
                 <div class="footer-about">
                     <div class="footer-logo">Eduarda<span>Ferraz</span></div>
                     <div class="social-links">
-                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-tiktok"></i></a>
+                        <a href="https://www.instagram.com/duda_designer.nails/" class="social-icon" target="_blank">
+                            <img src="{% static 'images/logoinsta.png' %}" alt="Instagram">
+                        </a>
+                        <a href="" class="social-icon"><i class="fab fa-facebook-f"></i>
+                            <img src="{% static 'images/2021_Facebook_icon.svg2.png' %}" alt="Instagram">
+                        </a>
+                        <a href="https://wa.me/5541998317720?text=Tenho%20interesse%20no%20seu%20servi%C3%A7o"
+                            class="social-icon"><i class="fab fa-whatsapp"></i>
+                            <img src="{% static 'images/logowhats.png' %}" alt="WhatsApp">
+                        </a>
                     </div>
                 </div>
 
@@ -206,12 +228,12 @@
                 <div class="footer-newsletter">
                     <h4>Novidades</h4>
                     <p>Cadastre-se para receber promoções exclusivas e dicas de beleza.</p>
-                    <a href="{% url 'cadastro_cliente' %}" class="btn-service" > Cadastre-se</a>
+                    <a href="{% url 'cadastro_cliente' %}" class="btn-service"> Cadastre-se</a>
 
-            <div class="copyright">
-                <p>&copy; 2025 Eric Ferraz. Todos os direitos reservados.</p>
-            </div>
-        </div>
+                    <div class="copyright">
+                        <p>&copy; 2025 Eric Ferraz. Todos os direitos reservados.</p>
+                    </div>
+                </div>
     </footer>
     <script src="{% static 'gestao/JS/homeJS.js' %}"></script>
 </body>

@@ -16,7 +16,7 @@
     --shadow-subtle: 0 8px 30px rgba(0, 0, 0, 0.05);
     --shadow-elevated: 0 15px 40px rgba(0, 0, 0, 0.08);
     --gradient-mauve: linear-gradient(135deg, var(--primary-mauve) 3%, var(--primary-mauve-dark) 100%);
-    --gradient-rose: linear-gradient(135deg, var(--accent-rosegold) 0%, var(--accent-rosegold-light) 100%);
+    --gradient-rose: linear-gradient(135deg, var(--accent-rosegold) 30%, var(--accent-rosegold-light) 100%);
     --transition-smooth: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     --border-radius: 16px;
     --border-radius-lg: 24px;
@@ -242,7 +242,7 @@ a {
 
 .section-header h2 {
     font-size: 2.5em;
-    color: var(--primary-mauve-dark);
+    color: var(--text-dark);
     margin-bottom: 15px;
     position: relative;
     display: inline-block;
@@ -299,7 +299,7 @@ a {
     margin-bottom: 30px;
 }
 
-.link-whatsapp {
+.link-icon {
     text-decoration: none; 
 
     color: #333333; 
@@ -309,7 +309,7 @@ a {
     transition: color 0.3s ease;
 }
 
-.link-whatsapp:hover {
+.link-icon:hover {
     color: #ac0fd7; 
 }
 
@@ -326,12 +326,16 @@ a {
     gap: 40px;
 }
 
-.service-card {
+.service-card1, .service-card2, .service-card3 {
     background-color: var(--neutral-light);
     border-radius: var(--border-radius);
     overflow: hidden;
     box-shadow: var(--shadow-subtle);
     transition: var(--transition-smooth);
+
+}
+#card1, #card2, #card3 {
+    transition: filter 0.9s ease-in-out, opacity 0.3s;
 }
 
 .service-card:hover {
@@ -374,14 +378,14 @@ a {
     font-size: 1.8em;
     color: var(--accent-rosegold);
     font-weight: 600;
-    margin-bottom: 15px;
+    margin-bottom: 15px; 
 }
 
 .btn-service {
     display: inline-block;
     padding: 12px 28px;
-    background: var(--gradient-mauve);
-    color: var(--text-light);
+    background: var(--gradient-rose);
+    color: var(--text-dark);
     border-radius: 50px;
     text-decoration: none;
     font-weight: 500;
@@ -431,7 +435,6 @@ a {
 
 .contact-icon,
 .address-icon {
-    background: var(--gradient-rose);
     width: 50px;
     height: 50px;
     border-radius: 50%;
@@ -492,8 +495,8 @@ footer p {
 }
 
 .social-icon {
-    width: 40px;
-    height: 40px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background-color: rgba(255, 255, 255, 0.1);
     display: flex;
@@ -502,6 +505,7 @@ footer p {
     color: var(--text-light);
     text-decoration: none;
     transition: var(--transition-smooth);
+    margin: 10px;
 }
 
 .social-icon:hover {
@@ -611,7 +615,7 @@ footer p {
     }
 
     .social-links {
-        justify-content: center;
+        justify-content: center;  
     }
 
     .footer-links h4::after,
