@@ -2,7 +2,7 @@ from ..models import Servico, Funcionario, JornadaTrabalho, Agendamento
 from datetime import timedelta , datetime
 from django.core.exceptions import ValidationError
 
-def verificar_disponibilidade(profissionalId,servicoId, hora_de_inicio,ignorar_agendamento_id=None):
+def verificar_disponibilidade(profissionalId,servicoId, hora_de_inicio,ignorar_agendamento_id=None)-> None:
     try:
         servico = Servico.objects.get(id=servicoId)
         funcionario = Funcionario.objects.get(id = profissionalId)
@@ -51,7 +51,7 @@ def verificar_disponibilidade(profissionalId,servicoId, hora_de_inicio,ignorar_a
     if conflitos_query.exists():
         raise ValidationError("Conflito de agendamento para o profissional neste horário.")
 
-def criar_agendamento(profissionalId, servicoId, clienteId, hora_de_inicio):
+def criar_agendamento(profissionalId, servicoId, clienteId, hora_de_inicio)-> Agendamento:
     verificar_disponibilidade(profissionalId, servicoId, hora_de_inicio)
 
     servico = Servico.objects.get(id=servicoId)
@@ -61,7 +61,7 @@ def criar_agendamento(profissionalId, servicoId, clienteId, hora_de_inicio):
     hora_fim = hora_de_inicio + duracao_servico
 
     try:
-        Agendamento.objects.create(
+        response =Agendamento.objects.create(
         profissional=funcionario,
         servico=servico,
         cliente_id=clienteId,
@@ -70,40 +70,39 @@ def criar_agendamento(profissionalId, servicoId, clienteId, hora_de_inicio):
     )
     except Exception as e:
         raise ValidationError(f"Erro ao criar agendamento: {str(e)}")
-    return "Agendamento criado com sucesso."     
+    return response
 
 def listar_agendamentos(clienteId):
     agendamentos = Agendamento.objects.filter(cliente_id=clienteId).order_by('data_hora_inicio')
     return agendamentos
 
-def cancelar_agendamento(agendamentoId):
+def cancelar_agendamento(agendamentoId) -> bool: 
     try:
         agendamento = Agendamento.objects.get(id=agendamentoId)
         agendamento.delete()
-        return "Agendamento cancelado com sucesso."
+        return True
     except Agendamento.DoesNotExist:
         raise ValidationError("Agendamento não encontrado.")
 
-def editar_agendamento(agendamentoId, novo_profissionalId, novo_servicoId, nova_hora_de_inicio):
+def editar_agendamento(agendamentoId, novo_profissionalId, novo_servicoId, nova_hora_de_inicio)-> bool:
     try:
         agendamento = Agendamento.objects.get(id=agendamentoId)
     except Agendamento.DoesNotExist:
         raise ValidationError("Agendamento não encontrado.")
-
-    verificar_disponibilidade(novo_profissionalId, novo_servicoId, nova_hora_de_inicio, ignorar_agendamento_id=agendamentoId)
-    servico = Servico.objects.get(id=novo_servicoId)
-    funcionario = Funcionario.objects.get(id=novo_profissionalId)
-
-    duracao_servico = timedelta(minutes=servico.duracao_minutos)
-    nova_hora_fim = nova_hora_de_inicio + duracao_servico
-
-    agendamento.profissional = funcionario
-    agendamento.servico = servico
-    agendamento.data_hora_inicio = nova_hora_de_inicio
-    agendamento.data_hora_fim = nova_hora_fim
-
+        
     try:
+        verificar_disponibilidade(novo_profissionalId, novo_servicoId, nova_hora_de_inicio, ignorar_agendamento_id=agendamentoId)
+        servico = Servico.objects.get(id=novo_servicoId)
+        funcionario = Funcionario.objects.get(id=novo_profissionalId)
+
+        duracao_servico = timedelta(minutes=servico.duracao_minutos)
+        nova_hora_fim = nova_hora_de_inicio + duracao_servico
+
+        agendamento.profissional = funcionario
+        agendamento.servico = servico
+        agendamento.data_hora_inicio = nova_hora_de_inicio
+        agendamento.data_hora_fim = nova_hora_fim
         agendamento.save()
-        return "Agendamento editado com sucesso."
+        return True
     except Exception as e:
         raise ValidationError(f"Erro ao editar agendamento: {str(e)}")

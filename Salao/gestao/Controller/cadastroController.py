@@ -3,7 +3,7 @@ from django.contrib.auth import login
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from ..models import ClienteProfile
-from ..services.cadastroService import ClienteRegistrationForm 
+from ..services.CadastroService import ClienteRegistrationForm 
 
 
 def cliente_registro_Controller(request):

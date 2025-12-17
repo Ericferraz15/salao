@@ -1,7 +1,7 @@
 from django.contrib import messages
 from datetime import timedelta, datetime
 from django.core.exceptions import ValidationError
-from ..services.agendaServices import criar_agendamento, listar_agendamentos, cancelar_agendamento
+from ..services.AgendaServices import criar_agendamento, listar_agendamentos, cancelar_agendamento
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.shortcuts import render, redirect
@@ -47,8 +47,8 @@ def listar_agendamentos_controller(request):
 @require_POST
 def cancelar_agendamento_controller(request, agendamento_ID):
     try:
-        message  = cancelar_agendamento(agendamentoId=agendamento_ID)
-        messages.success(request, message)
+        cancelar_agendamento(agendamentoId=agendamento_ID)
+        messages.success(request, "Agendamento cancelado com sucesso.")
 
     except ValidationError as error:
         messages.error(request, f"Erro ao cancelar agendamento: {error.message}")
