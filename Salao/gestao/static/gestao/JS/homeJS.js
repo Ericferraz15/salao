@@ -57,15 +57,22 @@
 function iniciarSlide(idElemento, listaImagens, tempo) {
     let indice = 0;
     const elemento = document.getElementById(idElemento);
-    
-    if(!elemento) return; 
+    if (!elemento) return;
 
     setInterval(() => {
-        indice = (indice + 1) % listaImagens.length;
-        elemento.src = listaImagens[indice];
+        elemento.style.opacity = 0;
+
+        setTimeout(() => {
+            indice = (indice + 1) % listaImagens.length;
+            elemento.src = listaImagens[indice];
+
+            elemento.style.opacity = 1;
+        }, 800);
+        
     }, tempo);
 }
 
-iniciarSlide('card1', imagens1, 3000);
-iniciarSlide('card2', imagens2, 3000);
-iniciarSlide('card3', imagens3, 3000);
+
+iniciarSlide('card1', imagens1, 6000);
+iniciarSlide('card2', imagens2, 6100);
+iniciarSlide('card3', imagens3, 6200);
