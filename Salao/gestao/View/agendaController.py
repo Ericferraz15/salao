@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect
 from ..models import *
 
 # @login_required #type: ignore
-def criar_agendamento_Controller(request):
+def criar_agendamento_View(request):
     if request.method == 'POST':
         profissional = request.POST.get('profissionalId')
         servico = request.POST.get('servicoId')
@@ -19,7 +19,7 @@ def criar_agendamento_Controller(request):
             cliente = ClienteProfile.objects.get(usuario=request.user).pk
             criar_agendamento(profissionalId=profissional, servicoId=servico, clienteId=cliente, hora_de_inicio=hora_de_inicio)
             messages.success(request, "Agendamento criado com sucesso.")
-            return redirect('listar_agendamentos_controller')
+            return redirect('listar_agendamentos_View')
         except ValidationError as error:
             messages.error(request, f"Erro ao criar agendamento: {error.message}")
 
@@ -34,7 +34,7 @@ def criar_agendamento_Controller(request):
 
 
 # @login_required #type: ignore
-def listar_agendamentos_controller(request):
+def listar_agendamentos_View(request):
     cliente = request.user.id
     agendamentos = listar_agendamentos(clienteId=cliente)
     context = {
@@ -45,11 +45,11 @@ def listar_agendamentos_controller(request):
 
 # @login_required #type: ignore
 @require_POST
-def cancelar_agendamento_controller(request, agendamento_ID):
+def cancelar_agendamento_View(request, agendamento_ID):
     try:
         cancelar_agendamento(agendamentoId=agendamento_ID)
         messages.success(request, "Agendamento cancelado com sucesso.")
 
     except ValidationError as error:
         messages.error(request, f"Erro ao cancelar agendamento: {error.message}")
-    return redirect('listar_agendamentos_controller')
+    return redirect('listar_agendamentos_View')

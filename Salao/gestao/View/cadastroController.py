@@ -6,7 +6,7 @@ from ..models import ClienteProfile
 from ..services.CadastroService import ClienteRegistrationForm 
 
 
-def cliente_registro_Controller(request):
+def cliente_registro_View(request):
     if request.method == 'POST':
         form = ClienteRegistrationForm(request.POST)
         if form.is_valid():
