@@ -1,0 +1,246 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eduarda Ferraz - Salão Premium</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'CSS/home.css' %}">
+</head>
+
+<body>
+    <!-- Navegação Superior -->
+    <nav class="top-nav">
+        <div class="container nav-container">
+            <div class="logo">Eduarda<span>Ferraz</span></div>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home">Início</a></li>
+                <li><a href="#about">Sobre Mim</a></li>
+                <li><a href="#services">Serviços</a></li>
+                <li><a href="#contact">Contato</a></li>
+            </ul>
+
+            <div class="auth-buttons">
+                <a href="{% url 'login_cliente' %}" class="btn-nav btn-login">Login</a>
+                <a href="{% url 'cadastro_cliente' %}" class="btn-nav btn-register">Cadastro</a>
+            </div>
+        </div>
+    </nav>
+    <!-- Capa / Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>A Sua Próxima Unha Perfeita Mora Aqui!</h1>
+            <p>A beleza está nos detalhes, e nas suas mãos, ela floresce.💖
+                Agende um momento só seu, feito com carinho, calma e muito capricho.✨</p>
+            <a href="{% url 'criar_agendamento_View' %}" class="btn-hero">Agendar Agora</a>
+        </div>
+    </section>
+
+    <!-- Sobre Mim -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="section-header">
+                <h2>Sobre Mim</h2>
+            </div>
+            <div class="about-content">
+                <div class="about-image">
+                    <img src="{% static 'images/dona.jpg' %}" alt=Foto da Especialista em Beleza>
+                </div>
+                <div class="about-text">
+                    <h3>Especialista em Nail desinger</h3>
+                    <p>Há 3 anos, embarquei nessa jornada de transformar unhas em verdadeiras obras de arte, e desde
+                        então, cada atendimento tem sido um prazer enorme.
+                        Para mim, cuidar das suas unhas vai muito além da técnica. É sobre te proporcionar um momento de
+                        pausa, de mimo e de cuidado, onde você pode relaxar e sair com a autoestima renovada</p>
+
+                    <a href="#contact" class="btn-service">Entre em Contato</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Serviços -->
+    <section class="services" id="services">
+        <div class="container">
+            <div class="section-header">
+                <h2>Nossos Serviços</h2>
+            </div>
+            <div class="services-grid">
+                <!-- Serviço 1 -->
+                <div class="service-card1">
+                    <div class="service-image">
+                        <img src="{% static 'images/fibraDeVidro.jpg' %}" alt="Corte de Cabelo" id="card1"
+                            class="card1">
+                    </div>
+                    <div class="service-content">
+                        <h3>Fibra De Vidro</h3>
+                        <p>O equilíbrio perfeito entre flexibilidade e solidez.
+                            Diferente de materiais comuns, a fibra de vidro não corrói, não apodrece e mantém o
+                            acabamento impecável por muito mais tempo. Excelência técnica para quem não abre mão da
+                            durabilidade.</p>
+                        <div class="service-price">R$ 150,00</div>
+                    </div>
+                </div>
+
+                <!-- Serviço 2 -->
+                <div class="service-card2">
+                    <div class="service-image">
+                        <img src="{% static 'images/esmaltacao.jpg' %}" alt="Coloração" id="card2" class="card2">
+                    </div>
+                    <div class="service-content">
+                        <h3>Esmaltação Em Gel</h3>
+                        <p>alta performance da tecnologia em gel — com cura UV/LED para um brilho espelhado e
+                            durabilidade extrema — oferecemos o acabamento perfeito que resiste ao tempo e destaca a sua
+                            beleza única.</p>
+                        <div class="service-price">R$ 60,00</div>
+                    </div>
+                </div>
+
+                <!-- Serviço 3 -->
+                <div class="service-card3">
+                    <div class="service-image">
+                        <img src="{% static 'images/banho.jpg' %}" alt="banho" id="card3" class="card3">
+                    </div>
+                    <div class="service-content">
+                        <h3>Banho De Gel</h3>
+                        <p>O banho de gel é o segredo da blindagem perfeita para quem busca resistência sem abrir mão da
+                            naturalidade. Através de uma camada protetora de alta tecnologia, suas unhas tornam-se
+                            imunes a quebras e lascas, ganhando um brilho impecável e uma estrutura fortalecida.</p>
+                        <div class="service-price">R$ 100,00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contato e Endereço -->
+    <section id="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2>Contatos e Endereço</h2>
+            </div>
+            <div class="contact-wrapper">
+                <!-- Contato -->
+                <div class="contact-info">
+                    <h3>Entre em Contato</h3>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <img src="{% static 'images/logowhats.png' %}" alt="WhatsApp" class="icon-whatsapp" style="width: 40px; height: 40px;
+                                position: relative;">
+                        </div>
+                        <div class="contact-text,">
+                            <h4>Telefone</h4>
+                            <a href="https://wa.me/5541998317720?text=Tenho%20interesse%20no%20seu%20servi%C3%A7o"
+                                class="link-icon">
+                                (41) 99831-7720
+                            </a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <img src="{% static 'images/logoemail.png' %}" alt="E-mail" class="icon-email">
+                        </div>
+                        <div class="contact-text">
+                            <h4>E-mail</h4>
+                            <a href="mailto:contato@Eduarda.com" class="link-icon">contato@Eduarda.com</a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <img src="{% static 'images/logoinsta.png' %}" alt="Instagram" class="icon-instagram">
+                        </div>
+                        <div class="contact-text">
+                            <h4>Instagram</h4>
+                            <a href="https://www.instagram.com/duda_designer.nails/" class="link-icon">
+                                @duda_designer.nails
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="address-info" id="address">
+                    <h3>Nosso Endereço</h3>
+                    <div class="address-item">
+                        <div class="address-icon">
+                            <img src="{% static 'images/logomapa.png' %}" alt="Endereço" class="icon-endereco">
+                        </div>
+                        <div class="address-text">
+                            <h4>Localização</h4>
+                            <p>Rua Schirlei Solange Mantovani, 485, Cidade Industrial, Curitiba PR, 81305-000, Brasil
+                            </p>
+                        </div>
+
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <img src="{% static 'images/logorelogio.png' %}" alt="horario-funcionamento"
+                                class="icon-horario">
+                        </div>
+                        <div class="contact-text">
+                            <h4>Horário de Funcionamento</h4>
+                            <p>Segunda a Sexta: 9h às 20h</p>
+                            <p>Sábado: 9h às 18h</p>
+                        </div>
+                    </div>
+                    <div class="address-item">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-about">
+                    <div class="footer-logo">Eduarda<span>Ferraz</span></div>
+                    <div class="social-links">
+                        <a href="https://www.instagram.com/duda_designer.nails/" class="social-icon" target="_blank">
+                            <img src="{% static 'images/logoinsta.png' %}" alt="Instagram">
+                        </a>
+                        <a href="" class="social-icon"><i class="fab fa-facebook-f"></i>
+                            <img src="{% static 'images/2021_Facebook_icon.svg2.png' %}" alt="Instagram">
+                        </a>
+                        <a href="https://wa.me/5541998317720?text=Tenho%20interesse%20no%20seu%20servi%C3%A7o"
+                            class="social-icon"><i class="fab fa-whatsapp"></i>
+                            <img src="{% static 'images/logowhats.png' %}" alt="WhatsApp">
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer-links">
+                    <h4>Links Rápidos</h4>
+                    <ul>
+                        <li><a href="#home">Início</a></li>
+                        <li><a href="#about">Sobre Mim</a></li>
+                        <li><a href="#services">Serviços</a></li>
+                        <li><a href="#contact">Contato</a></li>
+                        <li><a href="#address">Endereço</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-newsletter">
+                    <h4>Novidades</h4>
+                    <p>Cadastre-se para receber promoções exclusivas e dicas de beleza.</p>
+                    <a href="{% url 'cadastro_cliente' %}" class="btn-service"> Cadastre-se</a>
+
+                    <div class="copyright">
+                        <p>&copy;Eric Ferraz. Todos os direitos reservados.  2025</p>
+                    </div>
+                </div>
+    </footer>
+    <script src="{% static 'JS/homeJS.js' %}"></script>
+</body>
+
+</html>
