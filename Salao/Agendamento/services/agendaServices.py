@@ -1,108 +1,64 @@
-from ..models import Servico, Funcionario, JornadaTrabalho, Agendamento
-from datetime import timedelta , datetime
+from datetime import timedelta, datetime
+from django.db import transaction
 from django.core.exceptions import ValidationError
+from ..models import *
+from ..dtos import AgendamentoRequestDTO, AgendamentoResponseDTO
+from ..mapper import AgendamentoMapper
 
-def verificar_disponibilidade(profissionalId,servicoId, hora_de_inicio,ignorar_agendamento_id=None)-> None:
-    try:
-        servico = Servico.objects.get(id=servicoId)
-        funcionario = Funcionario.objects.get(id = profissionalId)
-    except (Servico.DoesNotExist, Funcionario.DoesNotExist):
-        raise ValidationError("Serviço ou Funcionario não encontrado.")
+class AgendamentoService:
+    def __init__(self):
+        self.mapper = AgendamentoMapper()
 
-    duracao_servico = timedelta(minutes=servico.duracao_minutos)
-    hora_fim = hora_de_inicio + duracao_servico
-    dia_semana = hora_de_inicio.weekday()
+    def verificar_disponibilidade(self, profissional_id, servico_id, data_inicio, ignorar_id=None):
+        servico = Servico.objects.get(id=servico_id)
+        duracao = timedelta(minutes=servico.duracao_minutos)
+        data_fim = data_inicio + duracao
+        jornada = JornadaTrabalho.objects.filter(
+            funcionario_id=profissional_id,
+            dia_da_semana=data_inicio.weekday()
+        ).first()
+        if not jornada:
+            raise ValidationError("Funcionário não trabalha neste dia.")
+        inicio_jornada = data_inicio.replace(hour=jornada.hora_inicio.hour, minute=jornada.hora_inicio.minute)
+        fim_jornada = data_inicio.replace(hour=jornada.hora_fim.hour, minute=jornada.hora_fim.minute)
+        if not (data_inicio >= inicio_jornada and data_fim <= fim_jornada):
+            raise ValidationError("Fora do horário de expediente do profissional.")
+        conflitos = Agendamento.objects.filter(
+            profissional_id=profissional_id,
+            data_hora_inicio__lt=data_fim,
+            data_hora_fim__gt=data_inicio
+        ).exclude(status='CANCELADO')
+        if ignorar_id:
+            conflitos = conflitos.exclude(id=ignorar_id)
+        if conflitos.exists():
+            raise ValidationError("Já existe um agendamento para este profissional neste horário.")
 
-    jornada_Funcionario = JornadaTrabalho.objects.filter(
-        funcionario=funcionario,
-        dia_da_semana=dia_semana,
-    ).first()
-
-    if not jornada_Funcionario:
-        raise ValidationError("Funcionário não trabalha neste dia.")
-
-    hora_de_inicio_jornada = datetime(
-        hora_de_inicio.year,
-        hora_de_inicio.month,
-        hora_de_inicio.day,
-        jornada_Funcionario.hora_inicio.hour,
-        jornada_Funcionario.hora_inicio.minute
+    @transaction.atomic
+    def criar(self, dto: AgendamentoRequestDTO) -> AgendamentoResponseDTO:
+        self.verificar_disponibilidade(dto.profissional_id, dto.servico_id, dto.data_hora_inicio)    
+        servico = Servico.objects.get(id=dto.servico_id)
+        data_fim = dto.data_hora_inicio + timedelta(minutes=servico.duracao_minutos)
+        agendamento = Agendamento.objects.create(
+            cliente_id=dto.cliente_id,
+            profissional_id=dto.profissional_id,
+            servico=servico,
+            data_hora_inicio=dto.data_hora_inicio,
+            data_hora_fim=data_fim,
+            valor_cobrado=servico.preco
         )
-    
-    hora_de_fim_jornada = datetime(
-        hora_de_inicio.year,
-        hora_de_inicio.month,
-        hora_de_inicio.day,
-        jornada_Funcionario.hora_fim.hour,
-        jornada_Funcionario.hora_fim.minute
-        )
+        return self.mapper.to_dto(agendamento)
 
-    if not (hora_de_inicio >= hora_de_inicio_jornada and hora_fim <= hora_de_fim_jornada):
-        raise ValidationError("Agendamento fora do horário de trabalho do funcionário.")
+    def listar_por_cliente(self, cliente_id: int) -> list[AgendamentoResponseDTO]:
+        agendamentos = Agendamento.objects.filter(cliente__usuario_id=cliente_id).order_by('data_hora_inicio')
+        return [self.mapper.to_dto(horarios) for horarios in agendamentos]
 
-    conflitos_query = Agendamento.objects.filter(
-        profissional=funcionario,
-        hora_de_inicio__lt=hora_fim,
-        hora_de_fim__gt=hora_de_inicio
-    )
-
-    if ignorar_agendamento_id:
-        conflitos_query = conflitos_query.exclude(id=ignorar_agendamento_id)
-    if conflitos_query.exists():
-        raise ValidationError("Conflito de agendamento para o profissional neste horário.")
-
-def criar_agendamento(profissionalId, servicoId, clienteId, hora_de_inicio)-> Agendamento:
-    verificar_disponibilidade(profissionalId, servicoId, hora_de_inicio)
-
-    servico = Servico.objects.get(id=servicoId)
-    funcionario = Funcionario.objects.get(id=profissionalId)
-
-    duracao_servico = timedelta(minutes=servico.duracao_minutos)
-    hora_fim = hora_de_inicio + duracao_servico
-
-    try:
-        response =Agendamento.objects.create(
-        profissional=funcionario,
-        servico=servico,
-        cliente_id=clienteId,
-        hora_de_inicio=hora_de_inicio,
-        hora_de_fim=hora_fim
-    )
-    except Exception as e:
-        raise ValidationError(f"Erro ao criar agendamento: {str(e)}")
-    return response
-
-def listar_agendamentos(clienteId):
-    agendamentos = Agendamento.objects.filter(cliente_id=clienteId).order_by('data_hora_inicio')
-    return agendamentos
-
-def cancelar_agendamento(agendamentoId) -> bool: 
-    try:
-        agendamento = Agendamento.objects.get(id=agendamentoId)
-        agendamento.delete()
-        return True
-    except Agendamento.DoesNotExist:
-        raise ValidationError("Agendamento não encontrado.")
-
-def editar_agendamento(agendamentoId, novo_profissionalId, novo_servicoId, nova_hora_de_inicio)-> bool:
-    try:
-        agendamento = Agendamento.objects.get(id=agendamentoId)
-    except Agendamento.DoesNotExist:
-        raise ValidationError("Agendamento não encontrado.")
-        
-    try:
-        verificar_disponibilidade(novo_profissionalId, novo_servicoId, nova_hora_de_inicio, ignorar_agendamento_id=agendamentoId)
-        servico = Servico.objects.get(id=novo_servicoId)
-        funcionario = Funcionario.objects.get(id=novo_profissionalId)
-
-        duracao_servico = timedelta(minutes=servico.duracao_minutos)
-        nova_hora_fim = nova_hora_de_inicio + duracao_servico
-
-        agendamento.profissional = funcionario
-        agendamento.servico = servico
-        agendamento.data_hora_inicio = nova_hora_de_inicio
-        agendamento.data_hora_fim = nova_hora_fim
-        agendamento.save()
-        return True
-    except Exception as e:
-        raise ValidationError(f"Erro ao editar agendamento: {str(e)}")
+    @transaction.atomic
+    def cancelar(self, agendamento_id: int) -> None:
+        try:
+            agendamento = Agendamento.objects.get(id=agendamento_id)
+            if agendamento.status == 'CONCLUIDO':
+                raise ValidationError("Não é possível cancelar um agendamento já concluído.")
+            agendamento.status = 'CANCELADO'
+            agendamento.save()
+        except Agendamento.DoesNotExist:
+            raise ValidationError("Agendamento não encontrado.")

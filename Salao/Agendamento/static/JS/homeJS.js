@@ -76,3 +76,5 @@ function iniciarSlide(idElemento, listaImagens, tempo) {
 iniciarSlide('card1', imagens1, 6000);
 iniciarSlide('card2', imagens2, 6100);
 iniciarSlide('card3', imagens3, 6200);
+
+

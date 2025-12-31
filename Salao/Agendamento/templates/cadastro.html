@@ -1,38 +1,61 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>Cadastro de Cliente</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="{% static 'CSS/style.css' %}">
 </head>
+
 <body>
     <div class="registration-container">
         <h1>Criar Conta de Cliente</h1>
         <p>Preencha os dados para se cadastrar e começar a agendar.</p>
-
         {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li class="{{ message.tags }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
+        <ul class="messages">
+            {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
         {% endif %}
-
-        <form method="post">
+        <form method="post" novalidate>
             {% csrf_token %}
-            
-            {{ form.as_p }} 
-            
-            <button type="submit">Cadastrar e Entrar</button>
+
+            <div style="display: none;">
+                {{ form.username }}
+            </div>
+
+            {% for field in form %}
+            {% if field.name != 'username' and field.name != 'password1' and field.name != 'password2' %}
+            <div class="form-row">
+                <label>{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            {% endif %}
+            {% endfor %}
+
+            <div class="form-row">
+                <label>Senha</label>
+                {{ form.password1 }}
+            </div>
+            <div class="form-row">
+                <label>Confirmação de senha</label>
+                {{ form.password2 }}
+            </div>
+
+            <button type="submit" class="btn-cadastrar">Cadastrar e Entrar</button>
         </form>
-        
         <hr>
         <p style="text-align: center;">Já tem uma conta? <a href="{% url 'login_cliente' %}">Faça Login aqui</a>.</p>
     </div>
 </body>
+
 </html>

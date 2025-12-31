@@ -3,7 +3,18 @@ from django.contrib.auth.models import AbstractUser
 from .utils.constants import STATUS_CHOICES, DIAS_SEMANA
 
 
+from django.db import models
+from django.contrib.auth.models import AbstractUser, UserManager 
+
 class Usuario(AbstractUser):
+    objects = UserManager()
+    
+    celular = models.CharField(
+        max_length = 15,
+        unique = True,
+        verbose_name = "celular"
+    )
+
     groups = models.ManyToManyField(
         'auth.Group', 
         verbose_name='grupos',
@@ -11,15 +22,6 @@ class Usuario(AbstractUser):
         help_text='Os grupos do usuário pertence.',
         related_name="gestao_usuario_set", 
         related_query_name="usuario",
-    )
-
-    first_name = models.CharField(
-        max_length = 30,
-        verbose_name = "nome"
-    )
-    last_name = models.CharField(
-        max_length = 150,
-        verbose_name = "sobrenome"
     )
 
     user_permissions = models.ManyToManyField(
@@ -31,23 +33,13 @@ class Usuario(AbstractUser):
         related_query_name="usuario_permission",
     )
     
-    email = models.EmailField(
-        max_length = 100
-    )
-    
-    celular = models.CharField(
-        max_length = 15,
-        unique = True,
-        verbose_name = "celular"
-    )
     def __str__(self):
-        return self.get_full_name()
-
+        return self.get_full_name() or self.username
 class ClienteProfile(models.Model):
     usuario = models.OneToOneField(
         Usuario, 
         on_delete = models.CASCADE, 
-        primary_key = True, # Define esta FK como a chave principal da tabela
+        primary_key = True, 
         verbose_name = "Usuário de Login"
     )
     

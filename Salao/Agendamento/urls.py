@@ -4,7 +4,7 @@ from django.contrib.auth import views as auth_views
 # Importações dos seus Views
 from .View.agendaController import criar_agendamento_View, listar_agendamentos_View, cancelar_agendamento_View
 from .View.homeController import home
-from .View.cadastroController import cliente_registro_View
+from .View.cadastroClienteController import cadastrar_Cliente_View
 
 urlpatterns = [
     path('', home, name='home'),
@@ -19,7 +19,7 @@ urlpatterns = [
         name='cancelar_agendamentos_View'
     ),
     
-    path('cadastro/', cliente_registro_View, name='cadastro_cliente'),
+    path('cadastro/', cadastrar_Cliente_View , name='cadastro_cliente'),
     
     path('login/',
         auth_views.LoginView.as_view(template_name='registration/login.html'),
