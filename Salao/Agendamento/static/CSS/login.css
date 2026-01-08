@@ -1,111 +1,131 @@
 /* ==================================== */
-/* 0. VARIÁVEIS E BASE (Cópia da Home) */
+/* LOGIN PAGE - CSS COMPATÍVEL COM SEU HTML */
 /* ==================================== */
+
+/* 0. VARIÁVEIS (igual à home) */
 :root {
-    /* Cores Principais */
     --primary-mauve: #da9689;
     --primary-mauve-dark: #fae3a1;
     --accent-rosegold: #d9b274;
     --accent-rosegold-light: #E8D0BD;
-    
-    /* Neutros */
     --background-soft: #FAF7F9;
     --neutral-light: #FFFFFF;
+    --neutral-light-translucent: rgba(255, 255, 255, 0.95);
     --neutral-gray: #F5F3F4;
     --text-dark: #4c3b34;
     --text-medium: #5A5A5A;
     --text-light: #FFFFFF;
-    
-    /* Efeitos */
+    --shadow-subtle: 0 8px 30px rgba(0, 0, 0, 0.05);
     --shadow-elevated: 0 15px 40px rgba(0, 0, 0, 0.08);
     --gradient-mauve: linear-gradient(135deg, var(--primary-mauve) 3%, var(--primary-mauve-dark) 100%);
     --gradient-rose: linear-gradient(135deg, var(--accent-rosegold) 30%, var(--accent-rosegold-light) 100%);
     --transition-smooth: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-    
-    /* Bordas */
     --border-radius: 16px;
     --border-radius-lg: 24px;
 }
 
-/* Reset básico */
+/* ==================================== */
+/* 1. RESET E ESTILOS GERAIS */
+/* ==================================== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* ==================================== */
-/* 1. ESTRUTURA DA PÁGINA (BACKGROUND) */
-/* ==================================== */
 body {
     font-family: 'Poppins', sans-serif;
     background-color: var(--background-soft);
     color: var(--text-dark);
     line-height: 1.6;
-    
-    /* Centralização Total */
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     
-    /* Fundo sutil decorativo */
-    background: radial-gradient(circle at 100% 200%, rgba(234, 0, 255, 0.1) 0%, transparent 200%),
-                radial-gradient(circle at 900% 80%, rgba(252, 0, 210, 0.1) 0%, transparent 200%),
-                var(--background-soft);
+    /* Fundo sofisticado igual à home */
+    background: 
+        radial-gradient(circle at 10% 20%, rgba(218, 150, 137, 0.08) 0%, transparent 30%),
+        radial-gradient(circle at 90% 80%, rgba(217, 178, 116, 0.08) 0%, transparent 30%),
+        linear-gradient(135deg, #FAF7F9 0%, #F5F3F4 100%);
+    position: relative;
+    overflow-x: hidden;
 }
+
+/* Elemento decorativo no fundo */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 20% 10%, rgba(250, 227, 161, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 90%, rgba(232, 208, 189, 0.05) 0%, transparent 50%);
+    z-index: -1;
+}
+
+/* ==================================== */
+/* 2. CONTAINER PRINCIPAL (SEU HTML) */
+/* ==================================== */
+.login-container {
+    width: 100%;
+    max-width: 1200px;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* ==================================== */
+/* 3. LOGO (EXATAMENTE IGUAL À HOME) */
+/* ==================================== */
 .logo {
     font-family: 'Playfair Display', serif;
-    font-size: 2.5rem; /* Ajuste conforme o desejado */
+    font-size: 3.5rem;
     font-weight: 600;
     text-align: center;
-    margin-bottom: 1.5rem;
-    
+    margin-bottom: 2rem;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.logo {
     background: var(--gradient-mauve);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    letter-spacing: 0.02em;
 }
 
 .logo span {
     color: var(--accent-rosegold);
-}
-
-/* Ajuste opcional: Diminuir o H1 se o nome já for o destaque */
-.login-container h1 {
-    font-size: 1.5rem;
-    margin-top: 0;
-    opacity: 0.8;
-}
-.login-container {
-    margin-top: -40px; 
-}
-.login-form-container{
-    margin-top: 60px;
-    padding: 10px;
-    width: 110%;
+    display: block;
+    font-weight: 700;
 }
 
 /* ==================================== */
-/* 2. CARTÃO DE LOGIN */
+/* 4. CONTAINER DO FORMULÁRIO (SEU HTML) */
 /* ==================================== */
-.login-container {
+.login-form-container {
     background-color: var(--neutral-light);
     width: 100%;
-    max-width: 450px; /* Tamanho compacto e elegante */
+    max-width: 450px;
     padding: 3rem 2.5rem;
-    margin: 20px;
+    margin: 0 auto;
     
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-elevated);
     
     position: relative;
-    overflow: hidden; /* Para conter a borda decorativa */
+    overflow: hidden;
     animation: slideUp 0.6s ease-out;
 }
 
-/* Borda decorativa superior (Toque de luxo) */
+/* Borda decorativa superior (igual à home) */
 .login-form-container::before {
     content: '';
     position: absolute;
@@ -116,141 +136,264 @@ body {
     background: var(--gradient-mauve);
 }
 
-/* Títulos e Textos */
-.login-form-container h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 2em;
-    color: var(--text-dark);
-    text-align: center;
-    margin-bottom: 0.5rem;
-    font-weight: 700;
+/* Sombra decorativa interna */
+.login-form-container::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 90%;
+    background: radial-gradient(circle at center, rgba(218, 150, 137, 0.08) 0%, transparent 70%);
+    z-index: 0;
+    pointer-events: none;
 }
 
-.login-form-container > p { /* O parágrafo logo abaixo do H2 */
+/* ==================================== */
+/* 5. CABEÇALHO DO FORMULÁRIO */
+/* ==================================== */
+.login-form-container h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    color: var(--text-dark);
+    text-align: center;
+    margin-bottom: 0.8rem;
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+}
+
+.login-form-container h2::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: var(--gradient-rose);
+    border-radius: 2px;
+}
+
+.login-form-container > p {
     text-align: center;
     color: var(--text-medium);
     margin-bottom: 2.5rem;
-    font-size: 0.95em;
+    font-size: 0.95rem;
+    font-weight: 300;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
 }
 
-form p {
-    margin-bottom: 1.2rem;
-}
-
-/* Labels */
-form label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    font-size: 1.5em;
-    color: var(--text-dark);
-}
-
-/* Inputs (Texto, Senha, Email) */
-input[type="text"],
-input[type="password"],
-input[type="email"] {
-    width: 100%;
-    padding: 14px 16px;
-    
-    background-color: var(--neutral-gray);
-    border: 1px solid transparent;
-    border-radius: var(--border-radius);
-    
-    font-family: 'Poppins', sans-serif;
-    color: var(--text-dark);
-    font-size: 1rem;
-    
-    transition: var(--transition-smooth);
-}
-
-/* Efeito ao clicar no input */
-input[type="text"]:focus,
-input[type="password"]:focus,
-input[type="email"]:focus {
-    outline: none;
-    background-color: #fff;
-    border-color: var(--primary-mauve);
-    box-shadow: 0 4px 12px rgba(218, 150, 137, 0.15);
-}
-
-button[type="submit"] {
-    display: block;
-    width: 100%;
-    padding: 16px;
-    margin-top: 1.5rem;
-    
-    background: var(--gradient-rose);
-    color: var(--text-dark);
-    
-    border: none;
-    border-radius: 50px;
-    
-    font-family: 'Poppins', sans-serif;
-    font-weight: 600;
-    font-size: 1.1em;
-    cursor: pointer;
-    
-    transition: var(--transition-smooth);
-    box-shadow: 0 8px 20px rgba(217, 178, 116, 0.2);
-}
-
-button[type="submit"]:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 25px rgba(217, 178, 116, 0.35);
-}
-
-hr {
-    border: 0;
-    height: 1px;
-    background-color: rgba(0,0,0,0.08);
-    margin: 2rem 0;
-}
-
-/* Link de cadastro */
-.login-container a {
-    color: var(--primary-mauve);
-    text-decoration: none;
-    font-weight: 600;
-    transition: color 0.3s ease;
-}
-
-.login-container a:hover {
-    color: var(--accent-rosegold);
-    text-decoration: underline;
-}
-
+/* ==================================== */
+/* 6. MENSAGENS (ERROR/SUCCESS) */
+/* ==================================== */
 ul.messages {
     list-style: none;
     padding: 0;
-    margin-bottom: 20px;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
 }
 
 ul.messages li {
-    padding: 12px 15px;
+    padding: 1rem 1.2rem;
     border-radius: 12px;
-    font-size: 0.9em;
-    margin-bottom: 10px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 1px solid transparent;
+    animation: slideInLeft 0.5s ease;
 }
 
-/* Cores específicas para mensagens */
-.error, .warning {
-    background-color: #FFF0F0;
+ul.messages li::before {
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 1.1rem;
+}
+
+ul.messages li.error {
+    background: linear-gradient(135deg, #FFF0F0 0%, #FFE8E8 100%);
     color: #D32F2F;
-    border: 1px solid #FFCDD2;
+    border-color: #FFCDD2;
 }
 
-.success {
-    background-color: #F0FFF4;
+ul.messages li.error::before {
+    content: '⚠️';
+}
+
+ul.messages li.success {
+    background: linear-gradient(135deg, #F0FFF4 0%, #E8F5E9 100%);
     color: #2E7D32;
-    border: 1px solid #C8E6C9;
+    border-color: #C8E6C9;
+}
+
+ul.messages li.success::before {
+    content: '✓';
+}
+
+ul.messages li.warning {
+    background: linear-gradient(135deg, #FFF8E1 0%, #FFF3E0 100%);
+    color: #F57C00;
+    border-color: #FFE0B2;
+}
+
+ul.messages li.warning::before {
+    content: '⚠️';
 }
 
 /* ==================================== */
-/* 5. ANIMAÇÕES E RESPONSIVIDADE */
+/* 7. FORMULÁRIO (FORM.AS_P DO DJANGO) */
 /* ==================================== */
+form {
+    position: relative;
+    z-index: 1;
+}
 
+form p {
+    margin-bottom: 1.8rem;
+    position: relative;
+}
+
+/* Estiliza os labels gerados pelo Django */
+form label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    letter-spacing: 0.02em;
+}
+
+/* Estiliza os inputs gerados pelo Django */
+form input[type="text"],
+form input[type="password"],
+form input[type="email"] {
+    width: 100%;
+    padding: 16px 20px;
+    background-color: var(--neutral-gray);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius);
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-dark);
+    font-size: 1rem;
+    transition: var(--transition-smooth);
+}
+
+form input[type="text"]:focus,
+form input[type="password"]:focus,
+form input[type="email"]:focus {
+    outline: none;
+    background-color: var(--neutral-light);
+    border-color: var(--primary-mauve);
+    box-shadow: 0 10px 25px rgba(218, 150, 137, 0.15);
+    transform: translateY(-2px);
+}
+
+/* Campo hidden (next) */
+form input[type="hidden"] {
+    display: none;
+}
+
+/* ==================================== */
+/* 8. BOTÃO DE SUBMIT */
+/* ==================================== */
+form button[type="submit"] {
+    display: block;
+    width: 100%;
+    padding: 18px;
+    margin-top: 2rem;
+    background: var(--gradient-rose);
+    color: var(--text-dark);
+    border: none;
+    border-radius: 50px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    box-shadow: 0 10px 25px rgba(217, 178, 116, 0.3);
+    letter-spacing: 0.03em;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efeito brilho no hover */
+form button[type="submit"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: 0.5s;
+}
+
+form button[type="submit"]:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(217, 178, 116, 0.4);
+}
+
+form button[type="submit"]:hover::before {
+    left: 100%;
+}
+
+/* ==================================== */
+/* 9. LINHA DIVISÓRIA E LINK CADASTRO */
+/* ==================================== */
+hr {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
+    margin: 2.5rem 0;
+}
+
+.login-form-container > p[style*="text-align: center"] {
+    text-align: center;
+    color: var(--text-medium);
+    font-size: 0.95rem;
+    margin-top: 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.login-form-container a {
+    color: var(--primary-mauve);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition-smooth);
+    position: relative;
+}
+
+.login-form-container a:hover {
+    color: var(--accent-rosegold);
+}
+
+.login-form-container a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--gradient-rose);
+    transition: var(--transition-smooth);
+}
+
+.login-form-container a:hover::after {
+    width: 100%;
+}
+
+/* ==================================== */
+/* 10. ANIMAÇÕES */
+/* ==================================== */
 @keyframes slideUp {
     from {
         opacity: 0;
@@ -262,18 +405,136 @@ ul.messages li {
     }
 }
 
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ==================================== */
+/* 11. RESPONSIVIDADE */
+/* ==================================== */
+@media (max-width: 768px) {
+    .logo {
+        font-size: 2.8rem;
+    }
+    
+    .login-form-container {
+        padding: 2.5rem 2rem;
+        margin: 0 20px;
+    }
+    
+    .login-form-container h2 {
+        font-size: 1.8rem;
+    }
+    
+    form input[type="text"],
+    form input[type="password"],
+    form input[type="email"] {
+        padding: 14px 16px;
+    }
+    
+    form button[type="submit"] {
+        padding: 16px;
+        font-size: 1rem;
+    }
+}
+
 @media (max-width: 480px) {
-    .login-container {
+    body {
+        padding: 20px;
+    }
+    
+    .logo {
+        font-size: 2.3rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .login-form-container {
         padding: 2rem 1.5rem;
-        margin: 15px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.05); /* Sombra mais leve no mobile */
+        margin: 0;
+        box-shadow: var(--shadow-subtle);
     }
     
-    .login-container h1 {
-        font-size: 1.8em;
+    .login-form-container h2 {
+        font-size: 1.6rem;
     }
     
-    input, button {
-        min-height: 48px; /* Melhor área de toque */
+    .login-form-container > p {
+        font-size: 0.9rem;
     }
-}   
+    
+    ul.messages li {
+        padding: 0.8rem 1rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* Melhorias para dispositivos de toque */
+@media (hover: none) {
+    form button[type="submit"]:hover {
+        transform: none;
+    }
+    
+    form input[type="text"]:focus,
+    form input[type="password"]:focus,
+    form input[type="email"]:focus {
+        transform: none;
+    }
+    
+    .login-form-container a:hover::after {
+        width: 0;
+    }
+}
+
+/* Estado de loading para o botão */
+form button[type="submit"].loading {
+    position: relative;
+    color: transparent;
+}
+
+form button[type="submit"].loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(76, 59, 52, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--text-dark);
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ==================================== */
+/* 12. ESTILOS ESPECÍFICOS PARA CHECKBOX */
+/* Se seu formulário tiver checkbox "Lembrar-me" */
+/* ==================================== */
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    accent-color: var(--primary-mauve);
+    cursor: pointer;
+}
