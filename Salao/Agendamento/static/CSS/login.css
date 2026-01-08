@@ -1,0 +1,279 @@
+/* ==================================== */
+/* 0. VARIÁVEIS E BASE (Cópia da Home) */
+/* ==================================== */
+:root {
+    /* Cores Principais */
+    --primary-mauve: #da9689;
+    --primary-mauve-dark: #fae3a1;
+    --accent-rosegold: #d9b274;
+    --accent-rosegold-light: #E8D0BD;
+    
+    /* Neutros */
+    --background-soft: #FAF7F9;
+    --neutral-light: #FFFFFF;
+    --neutral-gray: #F5F3F4;
+    --text-dark: #4c3b34;
+    --text-medium: #5A5A5A;
+    --text-light: #FFFFFF;
+    
+    /* Efeitos */
+    --shadow-elevated: 0 15px 40px rgba(0, 0, 0, 0.08);
+    --gradient-mauve: linear-gradient(135deg, var(--primary-mauve) 3%, var(--primary-mauve-dark) 100%);
+    --gradient-rose: linear-gradient(135deg, var(--accent-rosegold) 30%, var(--accent-rosegold-light) 100%);
+    --transition-smooth: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    
+    /* Bordas */
+    --border-radius: 16px;
+    --border-radius-lg: 24px;
+}
+
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ==================================== */
+/* 1. ESTRUTURA DA PÁGINA (BACKGROUND) */
+/* ==================================== */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--background-soft);
+    color: var(--text-dark);
+    line-height: 1.6;
+    
+    /* Centralização Total */
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Fundo sutil decorativo */
+    background: radial-gradient(circle at 100% 200%, rgba(234, 0, 255, 0.1) 0%, transparent 200%),
+                radial-gradient(circle at 900% 80%, rgba(252, 0, 210, 0.1) 0%, transparent 200%),
+                var(--background-soft);
+}
+.logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem; /* Ajuste conforme o desejado */
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    
+    background: var(--gradient-mauve);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: 0.02em;
+}
+
+.logo span {
+    color: var(--accent-rosegold);
+}
+
+/* Ajuste opcional: Diminuir o H1 se o nome já for o destaque */
+.login-container h1 {
+    font-size: 1.5rem;
+    margin-top: 0;
+    opacity: 0.8;
+}
+.login-container {
+    margin-top: -40px; 
+}
+.login-form-container{
+    margin-top: 60px;
+    padding: 10px;
+    width: 110%;
+}
+
+/* ==================================== */
+/* 2. CARTÃO DE LOGIN */
+/* ==================================== */
+.login-container {
+    background-color: var(--neutral-light);
+    width: 100%;
+    max-width: 450px; /* Tamanho compacto e elegante */
+    padding: 3rem 2.5rem;
+    margin: 20px;
+    
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-elevated);
+    
+    position: relative;
+    overflow: hidden; /* Para conter a borda decorativa */
+    animation: slideUp 0.6s ease-out;
+}
+
+/* Borda decorativa superior (Toque de luxo) */
+.login-form-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: var(--gradient-mauve);
+}
+
+/* Títulos e Textos */
+.login-form-container h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2em;
+    color: var(--text-dark);
+    text-align: center;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.login-form-container > p { /* O parágrafo logo abaixo do H2 */
+    text-align: center;
+    color: var(--text-medium);
+    margin-bottom: 2.5rem;
+    font-size: 0.95em;
+}
+
+form p {
+    margin-bottom: 1.2rem;
+}
+
+/* Labels */
+form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 1.5em;
+    color: var(--text-dark);
+}
+
+/* Inputs (Texto, Senha, Email) */
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+    width: 100%;
+    padding: 14px 16px;
+    
+    background-color: var(--neutral-gray);
+    border: 1px solid transparent;
+    border-radius: var(--border-radius);
+    
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-dark);
+    font-size: 1rem;
+    
+    transition: var(--transition-smooth);
+}
+
+/* Efeito ao clicar no input */
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus {
+    outline: none;
+    background-color: #fff;
+    border-color: var(--primary-mauve);
+    box-shadow: 0 4px 12px rgba(218, 150, 137, 0.15);
+}
+
+button[type="submit"] {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    margin-top: 1.5rem;
+    
+    background: var(--gradient-rose);
+    color: var(--text-dark);
+    
+    border: none;
+    border-radius: 50px;
+    
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 1.1em;
+    cursor: pointer;
+    
+    transition: var(--transition-smooth);
+    box-shadow: 0 8px 20px rgba(217, 178, 116, 0.2);
+}
+
+button[type="submit"]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(217, 178, 116, 0.35);
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-color: rgba(0,0,0,0.08);
+    margin: 2rem 0;
+}
+
+/* Link de cadastro */
+.login-container a {
+    color: var(--primary-mauve);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.login-container a:hover {
+    color: var(--accent-rosegold);
+    text-decoration: underline;
+}
+
+ul.messages {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+ul.messages li {
+    padding: 12px 15px;
+    border-radius: 12px;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+/* Cores específicas para mensagens */
+.error, .warning {
+    background-color: #FFF0F0;
+    color: #D32F2F;
+    border: 1px solid #FFCDD2;
+}
+
+.success {
+    background-color: #F0FFF4;
+    color: #2E7D32;
+    border: 1px solid #C8E6C9;
+}
+
+/* ==================================== */
+/* 5. ANIMAÇÕES E RESPONSIVIDADE */
+/* ==================================== */
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 480px) {
+    .login-container {
+        padding: 2rem 1.5rem;
+        margin: 15px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.05); /* Sombra mais leve no mobile */
+    }
+    
+    .login-container h1 {
+        font-size: 1.8em;
+    }
+    
+    input, button {
+        min-height: 48px; /* Melhor área de toque */
+    }
+}   

@@ -469,6 +469,7 @@ a {
     margin-bottom: 5px;
     color: var(--text-dark);
 }
+
 .link-icon:hover {
     color: var(--primary-mauve);
 }
@@ -592,7 +593,8 @@ footer p {
 /* 7. RESPONSIVIDADE OTIMIZADA */
 /* ==================================== */
 .mobile-menu-btn {
-    display: none; /* Escondido por padrão em todas as telas */
+    display: none;
+    /* Escondido por padrão em todas as telas */
     background: var(--gradient-mauve);
     border: none;
     width: 50px;
@@ -640,7 +642,7 @@ footer p {
     .mobile-menu-btn img {
         width: 30px;
         height: 30px;
-        background: none;        
+        background: none;
     }
 
 
@@ -660,7 +662,7 @@ footer p {
         flex-direction: column;
         justify-content: flex-start;
         padding-top: 100px;
-        padding-left: 30px;
+        padding-left: 60px;
         transition: var(--transition-smooth);
         z-index: 1001;
         box-shadow: var(--shadow-elevated);

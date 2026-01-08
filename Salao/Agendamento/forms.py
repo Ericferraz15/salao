@@ -13,14 +13,12 @@ class RegistroClienteForm(UserCreationForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Remova o campo username do formulário se não quiser mostrá-lo
         if 'username' in self.fields:
             del self.fields['username']
     
     def save(self, commit=True):
         user = super().save(commit=False)
-        # Se você não tem campo username no formulário, defina-o aqui
-        user.username = self.cleaned_data['email']  # ou outra lógica
+        user.username = self.cleaned_data['email']
         if commit:
             user.save()
         return user
