@@ -1,34 +1,130 @@
-from django.contrib import messages
-from datetime import timedelta, datetime
-from django.core.exceptions import ValidationError
-from ..services.agendaServices import criar_agendamento
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from ..models import ClienteProfile, Funcionario, Servico
+import json
+import logging
+from datetime import datetime
 
-# @login_required #type: ignore
-def criar_agendamento_Controller(request):
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from django.http import JsonResponse
+from django.shortcuts import redirect, render
+from django.utils import timezone
+
+# pyrefly: ignore [missing-import]
+from ..models import ClienteProfile, Funcionario, JornadaTrabalho, Servico
+# pyrefly: ignore [missing-import]
+from ..services.agendaServices import criar_agendamento, gerar_horarios_disponiveis
+
+
+logger = logging.getLogger(__name__)
+
+
+@login_required
+def criar_agendamento_controller(request):
+    try:
+        cliente_profile = ClienteProfile.objects.get(usuario=request.user)
+    except ClienteProfile.DoesNotExist:
+        messages.error(
+            request,
+            'Seu usuário não possui um perfil de cliente. Contate o suporte.'
+        )
+        return redirect('home')
+
     if request.method == 'POST':
-        profissional = request.POST.get('profissionalId')
-        servico = request.POST.get('servicoId')
-        hora_de_inicio_bruto = request.POST.get('hora_de_inicio')
+        profissional_id = request.POST.get('profissionalId')
+        servico_id = request.POST.get('servicoId')
+        hora_inicio_raw = request.POST.get('hora_de_inicio')
+
+        if not all([profissional_id, servico_id, hora_inicio_raw]):
+            messages.error(request, 'Preencha todos os campos obrigatórios.')
+            return redirect('criar_agendamento')
 
         try:
-            hora_de_inicio = datetime.strptime(hora_de_inicio_bruto, '%Y-%m-%dT%H:%M')
-            cliente = ClienteProfile.objects.get(usuario=request.user).pk
-            criar_agendamento(profissionalId=profissional, servicoId=servico, clienteId=cliente, hora_de_inicio=hora_de_inicio)
-            messages.success(request, "Agendamento criado com sucesso.")
-            return redirect('home')
-        except ValidationError as error:
-            messages.error(request, f"Erro ao criar agendamento: {error.message}")
-            return redirect('home')   
+            # make_aware converte o horário local (SP) selecionado pelo usuário
+            # para datetime aware, necessário com USE_TZ=True e PostgreSQL.
+            hora_de_inicio = timezone.make_aware(
+                datetime.strptime(hora_inicio_raw, '%Y-%m-%dT%H:%M')
+            )
+        except (ValueError, Exception):
+            messages.error(request, 'Formato de data/hora inválido.')
+            return redirect('criar_agendamento')
 
-    if request.method == 'GET':
-        funcionarios = Funcionario.objects.all()
-        servicos = Servico.objects.all()
-        context = {
+        try:
+            criar_agendamento(
+                profissional_id=int(profissional_id),
+                servico_id=int(servico_id),
+                cliente_id=cliente_profile.pk,
+                hora_de_inicio=hora_de_inicio,
+            )
+            messages.success(request, 'Agendamento criado com sucesso.')
+            return redirect('home')
+
+        except ValidationError as error:
+            for msg in error.messages:
+                messages.error(request, msg)
+            return redirect('criar_agendamento')
+
+    funcionarios = (
+        Funcionario.objects
+        .filter(esta_ativo=True)
+        .select_related('usuario')
+    )
+    servicos = Servico.objects.all()
+
+    jornadas_db = JornadaTrabalho.objects.select_related('funcionario').all()
+    dias_semana_dict = {
+        0: 'Segunda-feira', 1: 'Terça-feira', 2: 'Quarta-feira',
+        3: 'Quinta-feira', 4: 'Sexta-feira', 5: 'Sábado', 6: 'Domingo'
+    }
+    jornadas_json: dict[str, list[dict]] = {}
+
+    for j in jornadas_db:
+        f_id = str(j.funcionario.id)
+        if f_id not in jornadas_json:
+            jornadas_json[f_id] = []
+
+        jornadas_json[f_id].append({
+            'dia_semana': dias_semana_dict.get(j.dia_da_semana, str(j.dia_da_semana)),
+            'hora_inicio': j.hora_inicio.strftime('%H:%M'),
+            'hora_fim': j.hora_fim.strftime('%H:%M')
+        })
+
+    return render(
+        request,
+        'templateCliente/agendamento/criar_agendamento.html',
+        context={
             'funcionarios': funcionarios,
             'servicos': servicos,
-        }
-        return render(request, 'templateCliente/agendamento/criar_agendamento.html', context=context)
-        
+            'jornadas_json': json.dumps(jornadas_json)
+        },
+    )
+
+
+@login_required
+def api_horarios_disponiveis(request):
+    profissional_id = request.GET.get('profissional_id')
+    servico_id = request.GET.get('servico_id')
+
+    if not profissional_id or not servico_id:
+        return JsonResponse({
+            'success': False,
+            'error': 'Parâmetros profissional_id e servico_id são obrigatórios.',
+        }, status=400)
+
+    try:
+        pid = int(profissional_id)
+        sid = int(servico_id)
+    except (ValueError, TypeError):
+        return JsonResponse({
+            'success': False,
+            'error': 'IDs devem ser números inteiros.',
+        }, status=400)
+
+    try:
+        dias = gerar_horarios_disponiveis(pid, sid)
+        return JsonResponse({'success': True, 'dias': dias})
+    except Exception:
+        logger.exception('Erro ao gerar horários disponíveis')
+        return JsonResponse({
+            'success': False,
+            'error': 'Erro interno ao buscar horários. Tente novamente.',
+        }, status=500)

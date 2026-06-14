@@ -1,37 +1,58 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import login
+"""
+cadastroController.py
+
+CORREÇÕES APLICADAS:
+1. [BUG] O controller extraía first_name, last_name, email do cleaned_data e
+   os reatribuía manualmente — isso é desnecessário porque form.save() já
+   cuida disso. Código duplicado removido.
+
+2. [BUG] ClienteProfile.objects.create(telefone=...) — o model não tem campo
+   'telefone', causava TypeError. Corrigido: ClienteProfile não precisa
+   de campos extras além do usuario.
+
+3. [SEGURANÇA] Usuário autenticado acessando /cadastro/ agora é redirecionado
+   em vez de ver o formulário vazio (sem sentido lógico).
+
+4. [UX] Erros de formulário agora exibem o label do campo em português
+   em vez do nome do campo interno.
+"""
+
 from django.contrib import messages
-from django.core.exceptions import ValidationError
+from django.contrib.auth import login
+from django.shortcuts import redirect, render
+
 from ..models import ClienteProfile
-from ..services.cadastroService import ClienteRegistrationForm 
+from ..services.cadastroService import ClienteRegistrationForm
 
 
-def cliente_registro_Controller(request):
+def cliente_registro_controller(request):
+    # NOVO: redireciona usuário já autenticado
+    if request.user.is_authenticated:
+        return redirect('home')
+
     if request.method == 'POST':
         form = ClienteRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            
-            user.first_name = form.cleaned_data.get('first_name')
-            user.last_name = form.cleaned_data.get('last_name')
-            user.email = form.cleaned_data.get('email')
-            user.save()
+            # CORRIGIDO: form.save() já atribui todos os campos corretamente
+            user = form.save()
 
-            ClienteProfile.objects.create(
-                usuario=user,
-                telefone=form.cleaned_data.get('telefone')
-            )
-            
+            # CORRIGIDO: ClienteProfile só precisa do usuario — sem campo 'telefone'
+            ClienteProfile.objects.create(usuario=user)
+
             login(request, user)
-            messages.success(request, f"Conta criada com sucesso, {user.first_name}! Você já está logado.")
+            messages.success(
+                request,
+                f'Bem-vindo(a), {user.first_name}! Sua conta foi criada com sucesso.'
+            )
             return redirect('home')
-        else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"Erro no campo '{field}': {error}")
-            
+
+        # CORRIGIDO: usa o label do campo (em português) na mensagem de erro
+        for field, errors in form.errors.items():
+            label = form.fields[field].label if field in form.fields else field
+            for error in errors:
+                messages.error(request, f'{label}: {error}')
+
     else:
         form = ClienteRegistrationForm()
-        
-    context = {'form': form}
-    return render(request, 'templateCliente/cadastro/cadastro.html', context)
+
+    return render(request, 'templateCliente/cadastro/cadastro.html', {'form': form})

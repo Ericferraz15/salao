@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Galeria de Trabalhos - Eduarda Ferraz{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho da Galeria -->
+<section class="galeria-hero">
+    <div class="galeria-hero-overlay"></div>
+    <div class="container galeria-hero-content">
+        <span class="hero-subtitle">Portfólio</span>
+        <h1>Galeria de Trabalhos</h1>
+        <p>Inspire-se com alguns dos nossos trabalhos. Escolha o seu estilo favorito e agende seu horário.</p>
+    </div>
+</section>
+
+<!-- Catálogo -->
+<section class="galeria-section">
+    <div class="container">
+        <!-- Filtros por categoria -->
+        <div class="galeria-filtros" id="galeriaFiltros" role="tablist" aria-label="Filtrar por categoria">
+            {% for slug, rotulo in categorias %}
+                <button type="button"
+                        class="filtro-chip {% if slug == 'todos' %}ativo{% endif %}"
+                        data-filtro="{{ slug }}"
+                        aria-pressed="{% if slug == 'todos' %}true{% else %}false{% endif %}">
+                    {{ rotulo }}
+                </button>
+            {% endfor %}
+        </div>
+
+        <!-- Grade de imagens -->
+        <div class="galeria-grid" id="galeriaGrid">
+            {% for trabalho in trabalhos %}
+                <figure class="galeria-item" data-categoria="{{ trabalho.categoria }}">
+                    <img src="{% static trabalho.imagem %}"
+                         alt="{{ trabalho.titulo }} — {{ trabalho.categoria_label }}"
+                         loading="lazy"
+                         class="galeria-img"
+                         tabindex="0">
+                    <figcaption class="galeria-legenda">
+                        <span class="galeria-categoria">{{ trabalho.categoria_label }}</span>
+                        <span class="galeria-titulo">{{ trabalho.titulo }}</span>
+                    </figcaption>
+                    <span class="galeria-zoom" aria-hidden="true"><i class="fas fa-expand"></i></span>
+                </figure>
+            {% endfor %}
+        </div>
+
+        <div class="galeria-vazio" id="galeriaVazio" hidden>
+            <i class="far fa-image"></i>
+            <p>Nenhum trabalho nesta categoria por enquanto.</p>
+        </div>
+
+        <!-- CTA -->
+        <div class="galeria-cta">
+            <h2>Gostou de algum estilo?</h2>
+            <p>Agende seu horário e deixe suas unhas tão lindas quanto essas.</p>
+            <a href="{% url 'criar_agendamento' %}" class="btn-hero btn-primary">Agendar meu horário <i class="far fa-calendar-check" style="margin-left:8px;"></i></a>
+        </div>
+    </div>
+</section>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-label="Visualização da imagem">
+    <button class="lightbox-fechar" id="lightboxFechar" aria-label="Fechar">&times;</button>
+    <button class="lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="Anterior">&#8249;</button>
+    <figure class="lightbox-conteudo">
+        <img src="" alt="" id="lightboxImg">
+        <figcaption id="lightboxLegenda"></figcaption>
+    </figure>
+    <button class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="Próxima">&#8250;</button>
+</div>
+{% endblock %}

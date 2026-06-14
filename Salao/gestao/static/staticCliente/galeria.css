@@ -1,0 +1,383 @@
+/* ============================================================
+ * galeria.css — estilos da galeria/catálogo, teaser da home,
+ * lightbox e ajustes finos de responsividade.
+ *
+ * Mantido SEPARADO do home.css de propósito: assim edições de
+ * cor/tema no home.css não removem estes estilos por engano.
+ * ============================================================ */
+
+/* Rede de segurança: nenhuma imagem deve estourar o container */
+img {
+    max-width: 100%;
+}
+
+/* ==================================== */
+/* TEASER DA GALERIA (HOME)             */
+/* ==================================== */
+.galeria-teaser {
+    background-color: var(--background-section);
+}
+
+.teaser-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+}
+
+.teaser-item {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+    box-shadow: var(--shadow-sm);
+    display: block;
+}
+
+.teaser-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+.teaser-item::after {
+    content: '\f00e'; /* lupa (Font Awesome) */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.4rem;
+    background: rgba(42, 33, 40, 0.35);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.teaser-item:hover img { transform: scale(1.08); }
+.teaser-item:hover::after { opacity: 1; }
+
+@media (max-width: 768px) {
+    .teaser-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 420px) {
+    .teaser-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ==================================== */
+/* PÁGINA DE GALERIA / CATÁLOGO         */
+/* ==================================== */
+.galeria-hero {
+    position: relative;
+    min-height: 44vh;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    background-image: url('../images/galeria/along-marrom-marmore.jpeg');
+    background-size: cover;
+    background-position: center;
+    padding: 140px 0 70px;
+}
+
+.galeria-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(42, 33, 40, 0.55), rgba(42, 33, 40, 0.75));
+}
+
+.galeria-hero-content {
+    position: relative;
+    z-index: 1;
+    color: var(--text-light);
+}
+
+.galeria-hero-content h1 {
+    font-size: clamp(2.2rem, 6vw, 3.6rem);
+    color: var(--text-light);
+    margin-bottom: 16px;
+}
+
+.galeria-hero-content p {
+    max-width: 560px;
+    margin: 0 auto;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 300;
+    font-size: 1.1rem;
+}
+
+.galeria-section {
+    background-color: var(--background-alt);
+}
+
+/* Filtros */
+.galeria-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 44px;
+}
+
+.filtro-chip {
+    background: #fff;
+    border: 1px solid rgba(220, 129, 185, 0.4);
+    color: var(--text-body);
+    padding: 10px 22px;
+    border-radius: var(--radius-pill);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.filtro-chip:hover {
+    border-color: var(--primary-mauve);
+    color: var(--primary-mauve-dark);
+}
+
+.filtro-chip.ativo {
+    background: var(--gradient-mauve);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Grade de imagens */
+.galeria-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 22px;
+}
+
+.galeria-item {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    aspect-ratio: 4 / 5;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    background: #f0e9e2;
+    margin: 0;
+}
+
+.galeria-item.escondido { display: none; }
+
+.galeria-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s ease;
+}
+
+.galeria-item:hover .galeria-img { transform: scale(1.06); }
+
+.galeria-legenda {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 26px 18px 16px;
+    background: linear-gradient(to top, rgba(42, 33, 40, 0.85), transparent);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transform: translateY(8px);
+    opacity: 0;
+    transition: var(--transition-smooth);
+}
+
+.galeria-item:hover .galeria-legenda,
+.galeria-item:focus-within .galeria-legenda {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.galeria-categoria {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--primary-mauve-light);
+    font-weight: 600;
+}
+
+.galeria-titulo {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.galeria-zoom {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-heading);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: var(--transition-bounce);
+}
+
+.galeria-item:hover .galeria-zoom {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.galeria-vazio {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+.galeria-vazio i {
+    font-size: 2.6rem;
+    color: var(--primary-mauve-light);
+    margin-bottom: 12px;
+    display: block;
+}
+
+/* CTA da galeria */
+.galeria-cta {
+    text-align: center;
+    margin-top: 70px;
+    padding: 50px 24px;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(0, 0, 0, 0.03);
+}
+.galeria-cta h2 {
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    margin-bottom: 10px;
+}
+.galeria-cta p {
+    color: var(--text-muted);
+    margin-bottom: 28px;
+}
+
+@media (max-width: 480px) {
+    .galeria-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    .galeria-titulo { font-size: 0.85rem; }
+    .galeria-legenda {
+        padding: 18px 12px 12px;
+        opacity: 1;
+        transform: none;
+    }
+    .filtro-chip {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+    }
+}
+
+/* ==================================== */
+/* LIGHTBOX                             */
+/* ==================================== */
+.lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 15, 19, 0.92);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.lightbox.aberto {
+    opacity: 1;
+    visibility: visible;
+}
+
+.lightbox-conteudo {
+    max-width: 90vw;
+    max-height: 86vh;
+    text-align: center;
+    margin: 0;
+}
+
+.lightbox-conteudo img {
+    max-width: 100%;
+    max-height: 78vh;
+    border-radius: var(--radius-md);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.lightbox-conteudo figcaption {
+    color: #fff;
+    margin-top: 14px;
+    font-size: 1rem;
+    font-weight: 300;
+}
+
+.lightbox-fechar {
+    position: absolute;
+    top: 20px;
+    right: 26px;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2.6rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+.lightbox-fechar:hover { color: var(--primary-mauve-light); }
+
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.12);
+    border: none;
+    color: #fff;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+.lightbox-nav:hover { background: rgba(255, 255, 255, 0.25); }
+.lightbox-prev { left: 18px; }
+.lightbox-next { right: 18px; }
+
+@media (max-width: 600px) {
+    .lightbox-nav {
+        width: 42px;
+        height: 42px;
+        font-size: 1.5rem;
+    }
+    .lightbox-prev { left: 8px; }
+    .lightbox-next { right: 8px; }
+}
+
+/* ==================================== */
+/* AJUSTES FINOS DE RESPONSIVIDADE      */
+/* ==================================== */
+@media (max-width: 480px) {
+    .container { padding: 0 18px; }
+    .auth-card { padding: 36px 22px; }
+    .service-content { padding: 24px; }
+}
+
+/* Evita conteúdo sob a navbar fixa ao usar âncoras */
+[id] {
+    scroll-margin-top: 90px;
+}

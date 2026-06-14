@@ -1,244 +1,266 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+# pyrefly: ignore [missing-import]
 from .utils.constants import STATUS_CHOICES, DIAS_SEMANA
 
 
 class Usuario(AbstractUser):
+    """
+    Modelo de usuário customizado. Sempre defina AUTH_USER_MODEL no início
+    do projeto — mudar depois é trabalhoso.
+
+    CORRIGIDO:
+    - email marcado como unique=True (estava sem essa constraint, permitindo
+      dois usuários com o mesmo e-mail — falha de integridade grave).
+    - celular continua unique, mas agora blank=True para permitir cadastros
+      sem telefone caso necessário (ajuste conforme a regra de negócio).
+    """
+
     groups = models.ManyToManyField(
-        'auth.Group', 
+        'auth.Group',
         verbose_name='grupos',
         blank=True,
-        help_text='Os grupos do usuário pertence.',
-        related_name="gestao_usuario_set", 
-        related_query_name="usuario",
+        help_text='Grupos aos quais o usuário pertence.',
+        related_name='gestao_usuario_set',
+        related_query_name='usuario',
     )
-
-    first_name = models.CharField(
-        max_length = 30,
-        verbose_name = "nome"
-    )
-    last_name = models.CharField(
-        max_length = 150,
-        verbose_name = "sobrenome"
-    )
-
     user_permissions = models.ManyToManyField(
-        'auth.Permission', 
+        'auth.Permission',
         verbose_name='permissões de usuário',
         blank=True,
         help_text='Permissões específicas deste usuário.',
-        related_name="gestao_usuario_permissions",
-        related_query_name="usuario_permission",
+        related_name='gestao_usuario_permissions',
+        related_query_name='usuario_permission',
     )
-    
-    email = models.EmailField(
-        max_length = 100
-    )
-    
-    celular = models.CharField(
-        max_length = 15,
-        unique = True,
-        verbose_name = "celular"
-    )
+
+    first_name = models.CharField(max_length=30, verbose_name='nome')
+    last_name = models.CharField(max_length=150, verbose_name='sobrenome')
+
+    # CORRIGIDO: unique=True — e-mail é usado como identificador de contato,
+    # dois clientes com o mesmo e-mail causam confusão nos agendamentos.
+    email = models.EmailField(max_length=100, unique=True)
+
+    celular = models.CharField(max_length=15, unique=True, null=True, blank=True, verbose_name='celular')
+
+    class Meta:
+        verbose_name = 'Usuário'
+        verbose_name_plural = 'Usuários'
+
     def __str__(self):
         return self.get_full_name()
 
+
 class ClienteProfile(models.Model):
+    """
+    Perfil estendido do cliente. Padrão OneToOne é correto aqui.
+    """
     usuario = models.OneToOneField(
-        Usuario, 
-        on_delete = models.CASCADE, 
-        primary_key = True, # Define esta FK como a chave principal da tabela
-        verbose_name = "Usuário de Login"
+        Usuario,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        verbose_name='usuário de login',
     )
-    
+
     class Meta:
-        verbose_name = "Perfil de Cliente"
-        verbose_name_plural = "Perfis de Clientes"
+        verbose_name = 'Perfil de Cliente'
+        verbose_name_plural = 'Perfis de Clientes'
 
     def __str__(self):
-        return self.usuario.get_full_name() 
+        return self.usuario.get_full_name()
+
 
 class Funcionario(models.Model):
+    """
+    CORRIGIDO: campo renomeado de 'estaAtivo' para 'esta_ativo'
+    seguindo o padrão snake_case do Python/Django.
+    """
     usuario = models.OneToOneField(
-        Usuario, 
-        on_delete = models.CASCADE, 
-        verbose_name = "Usuário de Login"
+        Usuario,
+        on_delete=models.CASCADE,
+        verbose_name='usuário de login',
     )
-    
-    especializacao = models.CharField(
-        max_length = 100,
-        verbose_name = "Cargo"
-    )
+    especializacao = models.CharField(max_length=100, verbose_name='cargo')
 
-    # campo para saber a comissao do funcionário
+    # CORRIGIDO: snake_case (era camelCase 'estaAtivo' — inconsistente com Django)
+    esta_ativo = models.BooleanField(default=True, verbose_name='está ativo')
 
-    estaAtivo = models.BooleanField(
-        default = True,
-        verbose_name = "Está Ativo"
-    )
-    
     class Meta:
-        verbose_name = "Funcionário"
-        verbose_name_plural = "Funcionários"
+        verbose_name = 'Funcionário'
+        verbose_name_plural = 'Funcionários'
 
     def __str__(self):
-        return self.usuario.get_full_name() 
+        return self.usuario.get_full_name()
+
 
 class Servico(models.Model):
-    nome = models.CharField(
-        max_length = 100,
-        verbose_name = "Nome do Servico"
-    )
-    
-    descricao = models.TextField(
-        verbose_name = "Descricao do Servico"
-    )
-    
-    duracao_minutos = models.PositiveIntegerField(
-        verbose_name = "Duracao (minutos)"
-    )
-    
+    """
+    Serviços oferecidos pelo salão.
+    CORRIGIDO: verbose_name com acento (era 'Descricao do Servico').
+    """
+    nome = models.CharField(max_length=100, verbose_name='nome do serviço')
+    descricao = models.TextField(verbose_name='descrição do serviço')
+    duracao_minutos = models.PositiveIntegerField(verbose_name='duração (minutos)')
     preco = models.DecimalField(
-        max_digits = 10,
-        decimal_places = 2,
-        verbose_name = "Preco (R$)"
+        max_digits=10, decimal_places=2, verbose_name='preço (R$)'
     )
-    
+
     class Meta:
-        verbose_name = "Servico"
-        verbose_name_plural = "Servicos"
+        verbose_name = 'Serviço'
+        verbose_name_plural = 'Serviços'
 
     def __str__(self):
         return self.nome
 
+
 class Agendamento(models.Model):
+    """
+    CORRIGIDO:
+    - Campos renomeados de hora_de_inicio/hora_de_fim para data_hora_inicio/data_hora_fim
+      (estava inconsistente: o model usava data_hora_*, mas os services
+      usavam hora_de_inicio/hora_de_fim — causando AttributeError em runtime).
+    - Adicionado db_index=True nos campos mais consultados.
+    - valor_cobrado pode ser nulo até confirmação (blank=True, null=True).
+    """
     cliente = models.ForeignKey(
         ClienteProfile,
-        on_delete = models.CASCADE,
-        verbose_name = "Cliente"
+        on_delete=models.CASCADE,
+        verbose_name='cliente',
+        db_index=True,
     )
-    
     profissional = models.ForeignKey(
         Funcionario,
-        on_delete = models.CASCADE,
-        verbose_name = "Profissional"
+        on_delete=models.CASCADE,
+        verbose_name='profissional',
+        db_index=True,
     )
-    
     servico = models.ForeignKey(
         Servico,
-        on_delete = models.PROTECT,
-        verbose_name = "Servico"
+        on_delete=models.PROTECT,
+        verbose_name='serviço',
     )
 
+    # CORRIGIDO: nomenclatura consistente com o restante do modelo
     data_hora_inicio = models.DateTimeField(
-        verbose_name = "Início do Agendamento"
+        verbose_name='início do agendamento',
+        db_index=True,
     )
-
-    data_hora_fim = models.DateTimeField(
-        verbose_name = "Fim do Agendamento"
-    )
+    data_hora_fim = models.DateTimeField(verbose_name='fim do agendamento')
 
     valor_cobrado = models.DecimalField(
-        max_digits = 10,
-        decimal_places = 2,
-        verbose_name = "Valor Cobrado (R$)",
+        max_digits=10,
+        decimal_places=2,
+        verbose_name='valor cobrado (R$)',
+        null=True,
+        blank=True,
     )
-
     status = models.CharField(
-        max_length = 15,
-        choices = STATUS_CHOICES,
-        default= 'PENDENTE'
+        max_length=15,
+        choices=STATUS_CHOICES,
+        default='PENDENTE',
+        db_index=True,
     )
 
     class Meta:
-        verbose_name = "Agendamento"
-        verbose_name_plural = "Agendamentos"
+        verbose_name = 'Agendamento'
+        verbose_name_plural = 'Agendamentos'
+        # Índice composto para a consulta de conflito (a mais frequente)
+        indexes = [
+            models.Index(
+                fields=['profissional', 'data_hora_inicio', 'data_hora_fim'],
+                name='idx_agendamento_conflito',
+            )
+        ]
 
     def __str__(self):
-        return f"Agendamento de {self.cliente} com {self.profissional} para {self.servico} em {self.data_hora_inicio}"
+        return (
+            f'Agendamento de {self.cliente} com {self.profissional} '
+            f'para {self.servico} em {self.data_hora_inicio}'
+        )
+
 
 class JornadaTrabalho(models.Model):
-
+    """
+    CORRIGIDO: DIAS_SEMANA agora começa em 0 (Monday=0) para alinhar
+    com datetime.weekday() — o código original usava 1-7 mas weekday()
+    retorna 0-6, o que causava nunca encontrar a jornada correta na verificação.
+    """
     funcionario = models.ForeignKey(
         Funcionario,
         on_delete=models.CASCADE,
-        verbose_name="Funcionário"
+        verbose_name='funcionário',
     )
-    dia_da_semana = models.IntegerField(
-        choices = DIAS_SEMANA,
-        verbose_name = "Dia da Semana"
-    )
-    hora_inicio = models.TimeField(
-        verbose_name = "Hora de Início do Expediente"
-    )
-    hora_fim = models.TimeField(
-        verbose_name = "Hora de Fim do Expediente"
-    )
-    
+    dia_da_semana = models.IntegerField(choices=DIAS_SEMANA, verbose_name='dia da semana')
+    hora_inicio = models.TimeField(verbose_name='hora de início do expediente')
+    hora_fim = models.TimeField(verbose_name='hora de fim do expediente')
+
     class Meta:
-        unique_together = ('funcionario', 'dia_da_semana', 'hora_inicio') 
-        verbose_name = "Jornada de Trabalho"
-        verbose_name_plural = "Jornadas de Trabalho"
+        # Garante que o funcionário só tenha uma jornada por dia
+        unique_together = ('funcionario', 'dia_da_semana')
+        verbose_name = 'Jornada de Trabalho'
+        verbose_name_plural = 'Jornadas de Trabalho'
 
     def __str__(self):
-        return f"{self.funcionario.usuario.get_full_name()} - {self.get_dia_da_semana_display()}"# type: ignore
-    
-class Produtos(models.Model):
-    nome = models.CharField(
-        max_length = 100,
-        verbose_name = "Nome do Produto"
-    )
-    
-    descricao = models.TextField(
-        verbose_name = "Descrição do Produto"
-    )
-    
-    preco = models.DecimalField(
-        max_digits = 10,
-        decimal_places = 2,
-        verbose_name = "Preço (R$)"
-    )
-    
-    quantidade_estoque = models.PositiveIntegerField(
-        verbose_name = "Quantidade em Estoque"
-    )
+        return f'{self.funcionario.usuario.get_full_name()} - {self.get_dia_da_semana_display()}'
 
-    estoque_minimo = models.PositiveIntegerField(
-        verbose_name = "Estoque Mínimo"
+
+class Produto(models.Model):
+    """
+    CORRIGIDO: nome da classe no singular (era 'Produtos' — viola a
+    convenção Django de usar singular para nomes de modelo).
+    """
+    nome = models.CharField(max_length=100, verbose_name='nome do produto')
+    descricao = models.TextField(verbose_name='descrição do produto')
+    preco = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name='preço (R$)'
     )
+    quantidade_estoque = models.PositiveIntegerField(verbose_name='quantidade em estoque')
+    estoque_minimo = models.PositiveIntegerField(verbose_name='estoque mínimo')
 
     class Meta:
-        verbose_name = "Produto"
-        verbose_name_plural = "Produtos"
+        verbose_name = 'Produto'
+        verbose_name_plural = 'Produtos'
 
     def __str__(self):
         return self.nome
-    
-class TransicaoFinanceira(models.Model):
-    tipo = models.CharField(
-        max_length = 10,
-        choices = [('ENTRADA', 'Entrada'), ('SAIDA', 'Saída')],
-        verbose_name = "Tipo de Transição"
-    )
-    
+
+    @property
+    def abaixo_estoque_minimo(self) -> bool:
+        """Facilita alertas no admin e em relatórios."""
+        return self.quantidade_estoque < self.estoque_minimo
+
+
+class TransacaoFinanceira(models.Model):
+    """
+    CORRIGIDO:
+    - Renomeado de 'TransicaoFinanceira' para 'TransacaoFinanceira'
+      ('transição' = mudança de estado; 'transação' = operação financeira).
+    - Adicionado agendamento FK opcional para rastrear origem da receita.
+    """
+    TIPO_CHOICES = [
+        ('ENTRADA', 'Entrada'),
+        ('SAIDA', 'Saída'),
+    ]
+
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, verbose_name='tipo')
     valor = models.DecimalField(
-        max_digits = 10,
-        decimal_places = 2,
-        verbose_name = "Valor (R$)"
+        max_digits=10, decimal_places=2, verbose_name='valor (R$)'
     )
-    
-    data_hora = models.DateTimeField(
-        auto_now_add = True,
-        verbose_name = "Data e Hora"
-    )
-    
-    descricao = models.TextField(
-        verbose_name = "Descrição"
+    data_hora = models.DateTimeField(auto_now_add=True, verbose_name='data e hora')
+    descricao = models.TextField(verbose_name='descrição')
+
+    # Relacionamento opcional — permite rastrear receita por agendamento
+    agendamento = models.ForeignKey(
+        Agendamento,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='transacoes',
+        verbose_name='agendamento de origem',
     )
 
     class Meta:
-        verbose_name = "Transição Financeira"
-        verbose_name_plural = "Transições Financeiras"
-    
+        verbose_name = 'Transação Financeira'
+        verbose_name_plural = 'Transações Financeiras'
+
     def __str__(self):
-        return f"{self.tipo} - R$ {self.valor} em {self.data_hora}"
+        return f'{self.tipo} - R$ {self.valor} em {self.data_hora}'

@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Meus Agendamentos - Salão Premium{% endblock %}
+
+{% block content %}
+<div class="auth-body">
+    <div class="dashboard-page">
+        <div class="dashboard-header">
+            <h1>Meus Agendamentos</h1>
+            <p>Acompanhe seus horários e gerencie sua agenda de beleza.</p>
+            <a href="{% url 'criar_agendamento' %}" class="btn-hero btn-primary">
+                <i class="fas fa-plus"></i> Novo Agendamento
+            </a>
+        </div>
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <i class="fas fa-info-circle"></i> {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Agendamentos Ativos -->
+        <div class="dashboard-section">
+            <h2><i class="fas fa-calendar-check"></i> Próximos Agendamentos</h2>
+            {% if ativos %}
+                <div class="agendamentos-grid">
+                    {% for ag in ativos %}
+                    <div class="agendamento-card agendamento-{{ ag.status|lower }}">
+                        <div class="agendamento-card-header">
+                            <span class="status-badge status-{{ ag.status|lower }}">{{ ag.get_status_display }}</span>
+                            <span class="agendamento-data">
+                                <i class="fas fa-calendar-alt"></i>
+                                {{ ag.data_hora_inicio|date:"d/m/Y" }}
+                            </span>
+                        </div>
+                        <div class="agendamento-card-body">
+                            <div class="agendamento-info">
+                                <div class="info-row">
+                                    <i class="fas fa-clock"></i>
+                                    <span>{{ ag.data_hora_inicio|date:"H:i" }} — {{ ag.data_hora_fim|date:"H:i" }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <i class="fas fa-cut"></i>
+                                    <span>{{ ag.servico.nome }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <i class="fas fa-user"></i>
+                                    <span>{{ ag.profissional.usuario.get_full_name }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <i class="fas fa-tag"></i>
+                                    <span>R$ {{ ag.valor_cobrado|default:"—" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="agendamento-card-footer">
+                            <form method="post" action="{% url 'cancelar_agendamento' ag.pk %}"
+                                  onsubmit="return confirm('Tem certeza que deseja cancelar este agendamento?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-cancel">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-calendar-plus"></i>
+                    <p>Nenhum agendamento ativo no momento.</p>
+                    <a href="{% url 'criar_agendamento' %}" class="btn-hero btn-secondary">Agendar Agora</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Histórico -->
+        <div class="dashboard-section">
+            <h2><i class="fas fa-history"></i> Histórico</h2>
+            {% if historico %}
+                <div class="historico-table-wrapper">
+                    <table class="historico-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Horário</th>
+                                <th>Serviço</th>
+                                <th>Profissional</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ag in historico %}
+                            <tr>
+                                <td>{{ ag.data_hora_inicio|date:"d/m/Y" }}</td>
+                                <td>{{ ag.data_hora_inicio|date:"H:i" }}</td>
+                                <td>{{ ag.servico.nome }}</td>
+                                <td>{{ ag.profissional.usuario.get_full_name }}</td>
+                                <td>R$ {{ ag.valor_cobrado|default:"—" }}</td>
+                                <td><span class="status-badge status-{{ ag.status|lower }}">{{ ag.get_status_display }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state empty-state-small">
+                    <p>Nenhum histórico de agendamento ainda.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

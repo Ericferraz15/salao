@@ -1,64 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
 
-{% load static %}<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eduarda Ferraz - Salão Premium</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'staticCliente/home.css' %}">
-</head>
-
-<body>
-    <!-- Navegação Superior -->
-    <nav class="top-nav">
-        <div class="container nav-container">
-            <div class="logo">Eduarda<span>Ferraz</span></div>
-            
-            <button class="mobile-menu-btn" id="mobileMenuBtn">
-                <i class="fas fa-bars"></i>
-            </button>
-            
-            <ul class="nav-links" id="navLinks">
-                <li><a href="#home">Início</a></li>
-                <li><a href="#about">Sobre Mim</a></li>
-                <li><a href="#services">Serviços</a></li>
-                <li><a href="#contact">Contato</a></li>
-                <li><a href="#address">Endereço</a></li>
-            </ul>
-            
-            <div class="auth-buttons">
-                <a href="#" class="btn-nav btn-login">Login</a>
-                <a href="#" class="btn-nav btn-register">Cadastro</a>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Capa / Hero Section -->
+{% block content %}
+    <!-- Hero Section -->
     <section class="hero" id="home">
+        <div class="hero-overlay"></div>
         <div class="hero-content">
-            <h1>Transforme sua Beleza, Realce sua Essência</h1>
-            <p>Descubra os melhores tratamentos estéticos em um ambiente exclusivo e acolhedor. Agende sua experiência personalizada.</p>
-            <a href="#services" class="btn-hero">Agendar Agora</a>
+            <span class="hero-subtitle">Bem-vinda ao seu momento</span>
+            <h1>A beleza está nos detalhes, e nas suas mãos, ela floresce 💖</h1>
+            <p>Agende um momento só seu, feito com carinho, calma e muito capricho ✨</p>
+            <div class="hero-actions">
+                <a href="#services" class="btn-hero btn-primary">Conhecer Serviços</a>
+                <a href="{% url 'criar_agendamento' %}" class="btn-hero btn-secondary">Agendar Horário</a>
+            </div>
         </div>
     </section>
 
     <!-- Sobre Mim -->
     <section class="about" id="about">
         <div class="container">
-            <div class="section-header">
-                <h2>Sobre Mim</h2>
-            </div>
             <div class="about-content">
-                <div class="about-image">
-                    <img src="{% static 'images/dona.jpg' %}" alt=Foto da Especialista em Beleza>
+                <div class="about-image-wrapper">
+                    <div class="image-backdrop"></div>
+                    <img src="{% static 'images/dona.jpg' %}" alt="Eduarda Ferraz - Especialista em Nail Design" class="main-img">
+                    <div class="experience-badge">
+                        <span class="number">+3</span>
+                        <span class="text">Anos de<br>Experiência</span>
+                    </div>
                 </div>
                 <div class="about-text">
-                    <h3>Especialista em Nail desinger</h3>
-                    <p>Há 3 anos, embarquei nessa jornada de transformar unhas em verdadeiras obras de arte, e desde então, cada atendimento tem sido um prazer enorme.
-                    Para mim, cuidar das suas unhas vai muito além da técnica. É sobre te proporcionar um momento de pausa, de mimo e de cuidado, onde você pode relaxar e sair com a autoestima renovada</p>
-
-                    <a href="#contact" class="btn-service">Entre em Contato</a>
+                    <div class="section-header left-aligned">
+                        <span class="section-tag">A Profissional</span>
+                        <h2>Sobre Mim</h2>
+                    </div>
+                    <h3>Especialista em Nail Design e Estética</h3>
+                    <p>Há mais de 3 anos, embarquei nesta jornada de transformar unhas em verdadeiras obras de arte, e desde então, cada atendimento tem sido um prazer enorme.</p>
+                    <p>Para mim, cuidar de você vai muito além da técnica. É sobre te proporcionar um momento de pausa, de mimo e de cuidado, onde você pode relaxar e sair com a autoestima renovada e radiante.</p>
+                    <div class="signature">Eduarda Ferraz</div>
                 </div>
             </div>
         </div>
@@ -68,167 +46,155 @@
     <section class="services" id="services">
         <div class="container">
             <div class="section-header">
+                <span class="section-tag">O que oferecemos</span>
                 <h2>Nossos Serviços</h2>
-            </div>
-            <div class="services-grid">
-                <!-- Serviço 1 -->
-                <div class="service-card">
-                    <div class="service-image">
-                        <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Corte de Cabelo">
-                    </div>
-                    <div class="service-content">
-                        <h3>Corte e Estilização</h3>
-                        <p>Corte personalizado conforme seu tipo de rosto e estilo, com finalização profissional.</p>
-                        <div class="service-price">R$ 120,00</div>
-                        <a href="#" class="btn-service">Agendar</a>
-                    </div>
-                </div>
-                
-                <!-- Serviço 2 -->
-                <div class="service-card">
-                    <div class="service-image">
-                        <img src="https://images.unsplash.com/photo-1556228578-9c360e1d8d34?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Coloração">
-                    </div>
-                    <div class="service-content">
-                        <h3>Coloração Profissional</h3>
-                        <p>Técnicas avançadas de coloração com produtos de alta qualidade e baixa agressividade.</p>
-                        <div class="service-price">R$ 180,00</div>
-                        <a href="#" class="btn-service">Agendar</a>
-                    </div>
-                </div>
-                
-                <!-- Serviço 3 -->
-                <div class="service-card">
-                    <div class="service-image">
-                        <img src="https://images.unsplash.com/photo-1607772588355-bdc6d6b013c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Tratamentos Faciais">
-                    </div>
-                    <div class="service-content">
-                        <h3>Tratamentos Faciais</h3>
-                        <p>Limpeza de pele, hidratação profunda e terapias rejuvenescedoras para um rosto radiante.</p>
-                        <div class="service-price">R$ 150,00</div>
-                        <a href="#" class="btn-service">Agendar</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contato e Endereço -->
-    <section id="contact">
-        <div class="container">
-            <div class="section-header">
-                <h2>Contato e Endereço</h2>
-            </div>
-            <div class="contact-wrapper">
-                <!-- Contato -->
-                <div class="contact-info">
-                    <h3>Entre em Contato</h3>
-                    <div class="contact-item">
-                        <div class="contact-icon">
-                            <i class="fas fa-phone"></i>
-                        </div>
-                        <div class="contact-text">
-                            <h4>Telefone</h4>
-                            <p>(11) 99999-9999</p>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <div class="contact-icon">
-                            <i class="fas fa-envelope"></i>
-                        </div>
-                        <div class="contact-text">
-                            <h4>E-mail</h4>
-                            <p>contato@belezaelegante.com</p>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <div class="contact-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="contact-text">
-                            <h4>Horário de Funcionamento</h4>
-                            <p>Segunda a Sexta: 9h às 20h</p>
-                            <p>Sábado: 9h às 18h</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Endereço -->
-                <div class="address-info" id="address">
-                    <h3>Nosso Endereço</h3>
-                    <div class="address-item">
-                        <div class="address-icon">
-                            <i class="fas fa-map-marker-alt"></i>
-                        </div>
-                        <div class="address-text">
-                            <h4>Localização</h4>
-                            <p>Av. Paulista, 1000 - Bela Vista</p>
-                            <p>São Paulo - SP, 01310-100</p>
-                        </div>
-                    </div>
-                    <div class="address-item">
-                        <div class="address-icon">
-                            <i class="fas fa-subway"></i>
-                        </div>
-                        <div class="address-text">
-                            <h4>Metrô Mais Próximo</h4>
-                            <p>Estação Paulista (Linha 2 - Verde)</p>
-                            <p>5 minutos a pé</p>
-                        </div>
-                    </div>
-                    <div class="address-item">
-                        <div class="address-icon">
-                            <i class="fas fa-car"></i>
-                        </div>
-                        <div class="address-text">
-                            <h4>Estacionamento</h4>
-                            <p>Convênio com estacionamento</p>
-                            <p>3 horas gratuitas</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-about">
-                    <div class="footer-logo">Beleza<span>Elegante</span></div>
-                    <p>Um espaço dedicado à beleza e ao bem-estar, onde cada cliente recebe atenção personalizada e tratamentos de alta qualidade.</p>
-                    <div class="social-links">
-                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-tiktok"></i></a>
-                    </div>
-                </div>
-                
-                <div class="footer-links">
-                    <h4>Links Rápidos</h4>
-                    <ul>
-                        <li><a href="#home">Início</a></li>
-                        <li><a href="#about">Sobre Mim</a></li>
-                        <li><a href="#services">Serviços</a></li>
-                        <li><a href="#contact">Contato</a></li>
-                        <li><a href="#address">Endereço</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-newsletter">
-                    <h4>Novidades</h4>
-                    <p>Cadastre-se para receber promoções exclusivas e dicas de beleza.</p>
-                    <a href="#" class="btn-service" style="display: inline-block; margin-top: 15px;">Cadastrar</a>
-                </div>
+                <p class="section-desc">Procedimentos de alta qualidade para realçar a sua beleza única.</p>
             </div>
             
-            <div class="copyright">
-                <p>&copy; 2023 Beleza Elegante. Todos os direitos reservados.</p>
+            <div class="services-grid">
+                {% if servicos %}
+                    {% for servico in servicos %}
+                    {% cycle 'images/galeria/along-francesa-ouro.jpeg' 'images/galeria/gel-azul-strass.jpeg' 'images/galeria/art-stiletto-olho-grego.jpeg' 'images/galeria/along-francesinha.jpeg' 'images/galeria/gel-branco-glitter.jpeg' 'images/galeria/art-joaninha.jpeg' 'images/galeria/along-amendoa-preta.jpeg' 'images/galeria/gel-glitter-prata.jpeg' as svc_img silent %}
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="{% static svc_img %}" alt="{{ servico.nome }}" loading="lazy">
+                            <div class="service-duration"><i class="far fa-clock"></i> {{ servico.duracao_minutos }} min</div>
+                        </div>
+                        <div class="service-content">
+                            <h3>{{ servico.nome }}</h3>
+                            <p>{{ servico.descricao|truncatechars:100 }}</p>
+                            <div class="service-footer">
+                                <div class="service-price">R$ {{ servico.preco }}</div>
+                                <a href="{% url 'criar_agendamento' %}" class="btn-service">Agendar <i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="{% static 'images/galeria/along-francesa-ouro.jpeg' %}" alt="Nail Design" loading="lazy">
+                            <div class="service-duration"><i class="far fa-clock"></i> 90 min</div>
+                        </div>
+                        <div class="service-content">
+                            <h3>Nail Design Completo</h3>
+                            <p>Alongamento em fibra de vidro ou gel, com curvatura natural e alta resistência.</p>
+                            <div class="service-footer">
+                                <div class="service-price">R$ 150,00</div>
+                                <a href="{% url 'criar_agendamento' %}" class="btn-service">Agendar <i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="{% static 'images/galeria/gel-azul-strass.jpeg' %}" alt="Manutenção" loading="lazy">
+                            <div class="service-duration"><i class="far fa-clock"></i> 60 min</div>
+                        </div>
+                        <div class="service-content">
+                            <h3>Manutenção</h3>
+                            <p>Manutenção do alongamento, hidratação das cutículas e esmaltação perfeita.</p>
+                            <div class="service-footer">
+                                <div class="service-price">R$ 80,00</div>
+                                <a href="{% url 'criar_agendamento' %}" class="btn-service">Agendar <i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="{% static 'images/galeria/pe-francesinha.jpeg' %}" alt="Spa dos Pés" loading="lazy">
+                            <div class="service-duration"><i class="far fa-clock"></i> 45 min</div>
+                        </div>
+                        <div class="service-content">
+                            <h3>Spa dos Pés e Mãos</h3>
+                            <p>Esfoliação profunda, hidratação intensiva e relaxamento para renovar suas energias.</p>
+                            <div class="service-footer">
+                                <div class="service-price">R$ 90,00</div>
+                                <a href="{% url 'criar_agendamento' %}" class="btn-service">Agendar <i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="services-cta text-center" style="margin-top: 50px;">
+                <a href="{% url 'criar_agendamento' %}" class="btn-hero btn-primary">Ver Todos e Agendar</a>
             </div>
         </div>
-    </footer>
-    <script src="{% static 'gestao/JS/homeJS.js' %}"></script>
-</body>
-</html>
+    </section>
+
+    <!-- Galeria (teaser) -->
+    <section class="galeria-teaser" id="galeria-teaser">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Portfólio</span>
+                <h2>Nossos Trabalhos</h2>
+                <p class="section-desc">Um pouquinho do que criamos por aqui. Veja a galeria completa e inspire-se.</p>
+            </div>
+
+            <div class="teaser-grid">
+                <a href="{% url 'galeria' %}" class="teaser-item"><img src="{% static 'images/galeria/along-francesa-ouro.jpeg' %}" alt="Francesa com folha de ouro" loading="lazy"></a>
+                <a href="{% url 'galeria' %}" class="teaser-item"><img src="{% static 'images/galeria/art-stiletto-olho-grego.jpeg' %}" alt="Stiletto azul com olho grego" loading="lazy"></a>
+                <a href="{% url 'galeria' %}" class="teaser-item"><img src="{% static 'images/galeria/gel-azul-strass.jpeg' %}" alt="Azul royal com strass" loading="lazy"></a>
+                <a href="{% url 'galeria' %}" class="teaser-item"><img src="{% static 'images/galeria/along-marrom-marmore.jpeg' %}" alt="Marrom marmorizado com ouro" loading="lazy"></a>
+                <a href="{% url 'galeria' %}" class="teaser-item"><img src="{% static 'images/galeria/gel-glitter-prata.jpeg' %}" alt="Glitter prata" loading="lazy"></a>
+                <a href="{% url 'galeria' %}" class="teaser-item"><img src="{% static 'images/galeria/art-joaninha.jpeg' %}" alt="Vermelho com joaninhas" loading="lazy"></a>
+            </div>
+
+            <div class="text-center" style="margin-top: 44px;">
+                <a href="{% url 'galeria' %}" class="btn-hero btn-primary">Ver Galeria Completa <i class="fas fa-arrow-right" style="margin-left:8px;"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contato -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <div class="contact-wrapper">
+                <div class="contact-info">
+                    <div class="section-header left-aligned">
+                        <span class="section-tag">Visite-nos</span>
+                        <h2>Contato e Endereço</h2>
+                    </div>
+                    <div class="info-blocks">
+                        <div class="info-item">
+                            <div class="info-icon"><i class="fab fa-whatsapp"></i></div>
+                            <div class="info-text">
+                                <h4>Agende por WhatsApp</h4>
+                                <p>(41) 9831-7720</p>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon"><i class="far fa-envelope"></i></div>
+                            <div class="info-text">
+                                <h4>E-mail</h4>
+                                <p>contato@eduardaferraz.com</p>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon"><i class="far fa-clock"></i></div>
+                            <div class="info-text">
+                                <h4>Horário de Funcionamento</h4>
+                                <p>Terça a Sexta: 9h às 19h<br>Sábado: 9h às 17h</p>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon"><i class="fas fa-map-marker-alt"></i></div>
+                            <div class="info-text">
+                                <h4>Localização</h4>
+                                <p>Rua Cidade de Laguna, 561 - Cidade Industrial<br>Curitiba - PR, 81240-250</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-map">
+                    <iframe
+                        title="Mapa - Eduarda Ferraz Studio de Beleza"
+                        src="https://www.google.com/maps?q=Rua%20Cidade%20de%20Laguna%2C%20561%2C%20Cidade%20Industrial%2C%20Curitiba%20-%20PR%2C%2081240-250%2C%20Brasil&output=embed"
+                        width="100%" height="100%" style="border:0;"
+                        allowfullscreen="" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
