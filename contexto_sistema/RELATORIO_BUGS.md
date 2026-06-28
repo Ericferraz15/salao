@@ -167,7 +167,7 @@ legibilidade e boas práticas), testar tudo e versionar.
 ## 4. Resultado final (verde)
 
 ```
-manage.py test        → Ran 60 tests ... OK        (eram 23)
+manage.py test        → Ran 63 tests ... OK        (eram 23)
 simular_uso.py        → 35 verificações: 35 OK / 0 FALHA
 manage.py check       → no issues
 check --deploy        → no issues (DEBUG=False + SECRET_KEY forte)

@@ -638,6 +638,24 @@ class GerenciarAgendamentoAdminTests(_BaseAgenda):
         self.ag.refresh_from_db()
         self.assertEqual(self.ag.status, 'PENDENTE')  # nada mudou
 
+    def test_cancelar_via_http(self) -> None:
+        self._post('cancelar')
+        self.ag.refresh_from_db()
+        self.assertEqual(self.ag.status, 'CANCELADO')
+
+    def test_no_show_via_http(self) -> None:
+        self._post('no_show')
+        self.ag.refresh_from_db()
+        self.assertEqual(self.ag.status, 'NO_SHOW')
+
+    def test_acao_em_concluido_mostra_erro_sem_alterar(self) -> None:
+        concluir_agendamento(self.ag.pk)  # vira CONCLUIDO
+        resp = self._post('cancelar')     # não se cancela um concluído
+        self.ag.refresh_from_db()
+        self.assertEqual(self.ag.status, 'CONCLUIDO')  # inalterado
+        msgs = [str(m).lower() for m in resp.context['messages']]
+        self.assertTrue(any('não pode' in m for m in msgs), msgs)
+
 
 class CancelarAgendamentoClienteTests(_BaseAgenda):
     """Autorização: cliente não pode cancelar agendamento de outro cliente."""
