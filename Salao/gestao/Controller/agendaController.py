@@ -41,10 +41,12 @@ def criar_agendamento_controller(request):
         try:
             # make_aware converte o horário local (SP) selecionado pelo usuário
             # para datetime aware, necessário com USE_TZ=True e PostgreSQL.
+            # strptime lança ValueError quando o formato não bate; capturar
+            # apenas isso evita mascarar erros inesperados como "data inválida".
             hora_de_inicio = timezone.make_aware(
                 datetime.strptime(hora_inicio_raw, '%Y-%m-%dT%H:%M')
             )
-        except (ValueError, Exception):
+        except ValueError:
             messages.error(request, 'Formato de data/hora inválido.')
             return redirect('criar_agendamento')
 

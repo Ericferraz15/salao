@@ -1,4 +1,5 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -245,6 +246,19 @@ class AgendamentoServiceTests(TestCase):
                 hora_de_inicio=self._proxima_segunda(),
             )
 
+    def test_agendamento_no_passado_bloqueado(self) -> None:
+        """Regressão: a camada de serviço não pode aceitar horário passado."""
+        ontem_10h = (timezone.localtime(timezone.now()) - timedelta(days=1)).replace(
+            hour=10, minute=0, second=0, microsecond=0,
+        )
+        with self.assertRaises(ValidationError):
+            criar_agendamento(
+                profissional_id=self.funcionario.pk,
+                servico_id=self.servico.pk,
+                cliente_id=self.cliente.pk,
+                hora_de_inicio=ontem_10h,
+            )
+
 
 class PermissaoViewTests(TestCase):
     """Testes de acesso/permissão nas views."""
@@ -330,3 +344,72 @@ class ApiHorariosDisponiveisTests(TestCase):
         client = HttpClient()
         response = client.get(reverse('api_horarios_disponiveis'))
         self.assertEqual(response.status_code, 302)
+
+
+class DashboardAdminTimezoneTests(TestCase):
+    """Regressão: as métricas do painel usam o horário LOCAL, não UTC."""
+
+    def setUp(self) -> None:
+        self.admin = Usuario.objects.create_superuser(
+            username='boss', password='abc12345',
+            email='boss@t.com', celular='11000000099',
+        )
+        self.http = HttpClient()
+        self.http.login(username='boss', password='abc12345')
+
+        user_pro = Usuario.objects.create_user(
+            username='proz', password='abc12345',
+            email='proz@t.com', celular='11000000098',
+        )
+        self.func = Funcionario.objects.create(
+            usuario=user_pro, especializacao='Manicure', esta_ativo=True,
+        )
+        user_cli = Usuario.objects.create_user(
+            username='cliz', password='abc12345',
+            email='cliz@t.com', celular='11000000097',
+        )
+        self.cliente = ClienteProfile.objects.create(usuario=user_cli)
+        self.servico = Servico.objects.create(
+            nome='Corte', descricao='x', duracao_minutos=60, preco=80.00,
+        )
+
+    @patch('gestao.Controller.dashboardController.timezone.now')
+    def test_agendamentos_hoje_usa_data_local(self, mock_now) -> None:
+        # 15/06 00:30 UTC == 14/06 21:30 em São Paulo (UTC-3).
+        # "Hoje" local é 14/06; usar a data de UTC contaria o dia errado.
+        mock_now.return_value = datetime(2026, 6, 15, 0, 30, tzinfo=dt_timezone.utc)
+
+        inicio_local = timezone.make_aware(datetime(2026, 6, 14, 10, 0))
+        Agendamento.objects.create(
+            cliente=self.cliente, profissional=self.func, servico=self.servico,
+            data_hora_inicio=inicio_local,
+            data_hora_fim=inicio_local + timedelta(minutes=60),
+            status='PENDENTE', valor_cobrado=self.servico.preco,
+        )
+
+        response = self.http.get(reverse('dashboard_admin'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['agendamentos_hoje'], 1)
+
+
+class CriarAgendamentoControllerTests(TestCase):
+    """Garante que entrada de data inválida é tratada com mensagem amigável."""
+
+    def setUp(self) -> None:
+        self.user = Usuario.objects.create_user(
+            username='cform', password='abc12345',
+            email='cform@t.com', celular='11000000088',
+        )
+        ClienteProfile.objects.create(usuario=self.user)
+        self.http = HttpClient()
+        self.http.login(username='cform', password='abc12345')
+
+    def test_post_data_invalida_redireciona_com_erro(self) -> None:
+        response = self.http.post(reverse('criar_agendamento'), {
+            'profissionalId': '1',
+            'servicoId': '1',
+            'hora_de_inicio': 'data-invalida',
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        mensagens = [str(m) for m in response.context['messages']]
+        self.assertTrue(any('inválido' in m for m in mensagens), mensagens)

@@ -71,6 +71,12 @@ def verificar_disponibilidade(
     except Funcionario.DoesNotExist:
         raise ValidationError('Profissional não encontrado ou inativo.')
 
+    # Não permite agendar no passado. A API de horários já oculta horários
+    # passados na interface, mas a regra também precisa valer na camada de
+    # serviço (página aberta há muito tempo, edição, requisição forjada).
+    if hora_de_inicio <= timezone.now():
+        raise ValidationError('Não é possível agendar em um horário que já passou.')
+
     duracao = timedelta(minutes=servico.duracao_minutos)
     hora_fim = hora_de_inicio + duracao
 
@@ -327,7 +333,7 @@ def gerar_horarios_disponiveis(profissional_id: int, servico_id: int) -> list:
             dia_str = data_atual.isoformat()
             horarios_do_dia = []
             
-            # Se for hoje, só mostrar horários futuros (+30 mins pra segurança)
+            # Se for hoje, oculta os horários que já passaram (só mostra futuros).
             hora_minima = None
             if data_atual == hoje:
                 hora_minima = timezone.localtime(timezone.now()).time()

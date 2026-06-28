@@ -132,20 +132,24 @@ def dashboard_admin_controller(request):
                         )
                         return redirect('dashboard_admin')
 
-    hoje = timezone.now().date()
+    # Usa o horário LOCAL (America/Sao_Paulo) para definir "hoje" e o mês
+    # corrente. Com timezone.now() (UTC), à noite no Brasil a data/mês já
+    # viram o dia seguinte em UTC, e as métricas contariam o período errado.
+    # Os lookups __date/__month do Django também extraem no fuso local, então
+    # os dois lados da comparação precisam vir do mesmo fuso.
+    agora_local = timezone.localtime(timezone.now())
+
     # Conta apenas agendamentos ativos (PENDENTE/CONFIRMADO) para refletir
     # a carga de trabalho real do dia — cancelados não entram na métrica.
     agendamentos_hoje = Agendamento.objects.filter(
-        data_hora_inicio__date=hoje,
+        data_hora_inicio__date=agora_local.date(),
         status__in=['PENDENTE', 'CONFIRMADO'],
     ).count()
 
-    mes_atual = timezone.now().month
-    ano_atual = timezone.now().year
     receita_mes = TransacaoFinanceira.objects.filter(
         tipo='ENTRADA',
-        data_hora__year=ano_atual,
-        data_hora__month=mes_atual
+        data_hora__year=agora_local.year,
+        data_hora__month=agora_local.month,
     ).aggregate(total=Sum('valor'))['total'] or 0.00
 
     total_funcionarios = Funcionario.objects.filter(esta_ativo=True).count()
