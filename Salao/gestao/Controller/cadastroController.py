@@ -19,6 +19,7 @@ CORREÇÕES APLICADAS:
 
 from django.contrib import messages
 from django.contrib.auth import login
+from django.db import transaction
 from django.shortcuts import redirect, render
 
 from ..models import ClienteProfile
@@ -33,11 +34,14 @@ def cliente_registro_controller(request):
     if request.method == 'POST':
         form = ClienteRegistrationForm(request.POST)
         if form.is_valid():
-            # CORRIGIDO: form.save() já atribui todos os campos corretamente
-            user = form.save()
-
-            # CORRIGIDO: ClienteProfile só precisa do usuario — sem campo 'telefone'
-            ClienteProfile.objects.create(usuario=user)
+            # Cria usuário e perfil na mesma transação: se a criação do perfil
+            # falhar, o usuário não fica órfão (sem perfil e com e-mail/celular
+            # "presos" pela constraint unique, bloqueando uma nova tentativa).
+            with transaction.atomic():
+                # CORRIGIDO: form.save() já atribui todos os campos corretamente
+                user = form.save()
+                # CORRIGIDO: ClienteProfile só precisa do usuario — sem 'telefone'
+                ClienteProfile.objects.create(usuario=user)
 
             login(request, user)
             messages.success(

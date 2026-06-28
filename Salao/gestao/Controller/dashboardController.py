@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import Sum
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -114,24 +114,28 @@ def dashboard_admin_controller(request):
                     celular = celular_raw if celular_raw else None
 
                     try:
-                        user = Usuario.objects.create_user(
-                            username=email,
-                            email=email,
-                            first_name=funcionario_form.cleaned_data['first_name'],
-                            last_name=funcionario_form.cleaned_data['last_name'],
-                            celular=celular,
-                            password=senha_temporaria,
-                        )
+                        # Usuário + Funcionário na mesma transação: se a criação
+                        # do Funcionário falhar, o usuário não fica órfão (staff
+                        # sem registro de profissional, com e-mail/celular presos).
+                        with transaction.atomic():
+                            user = Usuario.objects.create_user(
+                                username=email,
+                                email=email,
+                                first_name=funcionario_form.cleaned_data['first_name'],
+                                last_name=funcionario_form.cleaned_data['last_name'],
+                                celular=celular,
+                                password=senha_temporaria,
+                            )
+                            user.is_staff = True
+                            user.save(update_fields=['is_staff'])
+
+                            funcionario = funcionario_form.save(commit=False)
+                            funcionario.usuario = user
+                            funcionario.save()
                     except IntegrityError:
                         # Celular já cadastrado para outro usuário
                         messages.error(request, 'Este número de celular já está cadastrado.')
                     else:
-                        user.is_staff = True
-                        user.save()
-
-                        funcionario = funcionario_form.save(commit=False)
-                        funcionario.usuario = user
-                        funcionario.save()
                         messages.success(
                             request,
                             f'Profissional adicionado! Senha temporária: {senha_temporaria}'

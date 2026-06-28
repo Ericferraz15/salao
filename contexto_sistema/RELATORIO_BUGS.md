@@ -131,6 +131,17 @@ legibilidade e boas práticas), testar tudo e versionar.
     cp313 instalados, imagem exportada).
   - Com 3.11: `pip install 'django>=6.0'` **falha** (sem versão compatível).
 
+### 🐞 Bug 12 — Criação de usuário não-atômica (cadastro e admin) *(robustez/integridade)*
+- **Arquivos:** `Controller/cadastroController.py`, `Controller/dashboardController.py`
+- **Causa:** o cadastro criava `Usuario` e depois `ClienteProfile` em passos
+  separados; o painel criava `Usuario` e depois `Funcionario`. Se o segundo
+  passo falhasse, sobrava um usuário órfão — sem perfil/registro e com
+  e‑mail/celular "presos" pela constraint `unique`, bloqueando nova tentativa.
+- **Correção:** ambos os pares de criação agora em `transaction.atomic()`
+  (tudo ou nada).
+- **Teste:** `...test_cadastro_e_atomico_rollback_se_perfil_falha` (mock força
+  falha na criação do perfil e confirma que o usuário **não** persiste).
+
 ### 🔧 Cosmético — formato monetário e normalização de e-mail
 - `receita_mes` vazia aparecia como "R$ 0.0"; com `|floatformat:2` (locale
   pt-br) passa a "R$ 0,00".
@@ -152,7 +163,7 @@ legibilidade e boas práticas), testar tudo e versionar.
 ## 4. Resultado final (verde)
 
 ```
-manage.py test        → Ran 58 tests ... OK        (eram 23)
+manage.py test        → Ran 60 tests ... OK        (eram 23)
 simular_uso.py        → 35 verificações: 35 OK / 0 FALHA
 manage.py check       → no issues
 check --deploy        → no issues (DEBUG=False + SECRET_KEY forte)

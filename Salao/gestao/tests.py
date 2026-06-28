@@ -779,6 +779,18 @@ class CadastroSucessoControllerTests(TestCase):
         msgs = [str(m).lower() for m in resp.context['messages']]
         self.assertTrue(any('bem-vindo' in m for m in msgs), msgs)
 
+    def test_cadastro_e_atomico_rollback_se_perfil_falha(self) -> None:
+        """Se a criação do ClienteProfile falha, o Usuario é desfeito (atomic)."""
+        http = HttpClient()
+        with patch.object(ClienteProfile.objects, 'create', side_effect=RuntimeError('boom')):
+            with self.assertRaises(RuntimeError):
+                http.post(reverse('cadastro_cliente'), {
+                    'username': 'rollback', 'first_name': 'Roll', 'last_name': 'Back',
+                    'email': 'rollback@teste.com', 'celular': '(11) 97777-0000',
+                    'password1': 'SenhaForte@123', 'password2': 'SenhaForte@123',
+                })
+        self.assertFalse(Usuario.objects.filter(email='rollback@teste.com').exists())
+
 
 class DashboardClienteHistoricoTests(_BaseAgenda):
     """O histórico deve listar o agendamento mais recente primeiro."""
