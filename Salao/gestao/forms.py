@@ -25,8 +25,10 @@ class FuncionarioForm(forms.ModelForm):
         max_length=150, required=True, label='Sobrenome',
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Sobrenome'}),
     )
+    # max_length=100 espelha Usuario.email; sem isso o EmailField aceitaria 254
+    # e o INSERT falharia no PostgreSQL com e-mail acima de 100 caracteres.
     email = forms.EmailField(
-        required=True, label='E-mail',
+        max_length=100, required=True, label='E-mail',
         widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'E-mail'}),
     )
     celular = forms.CharField(

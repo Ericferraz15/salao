@@ -126,6 +126,9 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # Completa o HSTS (já temos max-age de 1 ano + includeSubDomains); permite
+    # inscrição na preload list dos navegadores e silencia o aviso security.W021.
+    SECURE_HSTS_PRELOAD = True
     SECURE_SSL_REDIRECT = True
 
 # ─── LOGGING ──────────────────────────────────────────────────────────────────

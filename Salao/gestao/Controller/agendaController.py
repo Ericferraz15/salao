@@ -58,7 +58,9 @@ def criar_agendamento_controller(request):
                 hora_de_inicio=hora_de_inicio,
             )
             messages.success(request, 'Agendamento criado com sucesso.')
-            return redirect('home')
+            # Vai para "Meus Agendamentos": a home não renderiza mensagens, então
+            # a confirmação se perderia. Lá o cliente vê o agendamento recém-criado.
+            return redirect('dashboard_cliente')
 
         except ValidationError as error:
             for msg in error.messages:

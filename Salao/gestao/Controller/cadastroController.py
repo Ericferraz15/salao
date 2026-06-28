@@ -44,7 +44,10 @@ def cliente_registro_controller(request):
                 request,
                 f'Bem-vindo(a), {user.first_name}! Sua conta foi criada com sucesso.'
             )
-            return redirect('home')
+            # Vai para "Meus Agendamentos": a home não renderiza mensagens (a
+            # saudação se perderia) e essa tela faz o onboarding com o CTA de
+            # agendar.
+            return redirect('dashboard_cliente')
 
         # CORRIGIDO: usa o label do campo (em português) na mensagem de erro
         for field, errors in form.errors.items():

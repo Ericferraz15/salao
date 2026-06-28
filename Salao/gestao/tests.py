@@ -14,18 +14,35 @@ from .models import (
     JornadaTrabalho,
     Servico,
     Agendamento,
+    TransacaoFinanceira,
 )
 
 # pyrefly: ignore [missing-import]
 from .services.agendaServices import (
     criar_agendamento,
     cancelar_agendamento,
+    confirmar_agendamento,
+    concluir_agendamento,
+    marcar_no_show,
+    editar_agendamento,
+    gerar_horarios_disponiveis,
     verificar_disponibilidade,
 )
 # pyrefly: ignore [missing-import]
 from .services.cadastroService import ClienteRegistrationForm
+# pyrefly: ignore [missing-import]
+from .forms import FuncionarioForm
 
 Usuario = get_user_model()
+
+
+def proxima_segunda_10h():
+    """Próxima segunda-feira às 10h (datetime aware, fuso SP). Sempre futuro."""
+    hoje = timezone.localtime(timezone.now())
+    dias = (7 - hoje.weekday()) % 7 or 7
+    return (hoje + timedelta(days=dias)).replace(
+        hour=10, minute=0, second=0, microsecond=0,
+    )
 
 
 class UsuarioEPerfilTests(TestCase):
@@ -108,6 +125,22 @@ class UsuarioEPerfilTests(TestCase):
         })
         self.assertFalse(form.is_valid())
         self.assertIn('celular', form.errors)
+
+    def test_form_registro_first_name_longo_invalido(self) -> None:
+        """first_name > 30 é barrado na validação do ModelForm (Usuario.first_name=30
+        está em Meta.fields, então _post_clean valida contra o model). Documenta o
+        limite e o mantém alinhado ao max_length declarado no form."""
+        form = ClienteRegistrationForm(data={
+            'username': 'userlong',
+            'first_name': 'A' * 31,
+            'last_name': 'User',
+            'email': 'long@teste.com',
+            'celular': '(11) 99999-2222',
+            'password1': 'SenhaForte@123',
+            'password2': 'SenhaForte@123',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('first_name', form.errors)
 
 
 class AgendamentoServiceTests(TestCase):
@@ -413,3 +446,326 @@ class CriarAgendamentoControllerTests(TestCase):
         self.assertEqual(response.status_code, 200)
         mensagens = [str(m) for m in response.context['messages']]
         self.assertTrue(any('inválido' in m for m in mensagens), mensagens)
+
+
+class _BaseAgenda(TestCase):
+    """Cenário comum: 1 profissional (seg-sex 09-18), 1 serviço (60min), 1 cliente."""
+
+    def setUp(self) -> None:
+        self.user_pro = Usuario.objects.create_user(
+            username='p', password='abc12345', email='p@t.com', celular='12000000001',
+        )
+        self.func = Funcionario.objects.create(
+            usuario=self.user_pro, especializacao='Nail', esta_ativo=True,
+        )
+        self.servico = Servico.objects.create(
+            nome='Gel', descricao='x', duracao_minutos=60, preco=100.00,
+        )
+        self.user_cli = Usuario.objects.create_user(
+            username='cl', password='abc12345', email='cl@t.com', celular='12000000002',
+        )
+        self.cliente = ClienteProfile.objects.create(usuario=self.user_cli)
+        for dia in range(5):
+            JornadaTrabalho.objects.create(
+                funcionario=self.func, dia_da_semana=dia,
+                hora_inicio='09:00', hora_fim='18:00',
+            )
+
+    def _novo_agendamento(self, hora=None):
+        return criar_agendamento(
+            profissional_id=self.func.pk, servico_id=self.servico.pk,
+            cliente_id=self.cliente.pk, hora_de_inicio=hora or proxima_segunda_10h(),
+        )
+
+
+class TransicoesStatusServiceTests(_BaseAgenda):
+    """Confirmar / concluir (receita) / no-show e suas pré-condições."""
+
+    def test_confirmar(self) -> None:
+        ag = self._novo_agendamento()
+        self.assertEqual(confirmar_agendamento(ag.pk).status, 'CONFIRMADO')
+
+    def test_confirmar_apenas_pendente(self) -> None:
+        ag = self._novo_agendamento()
+        confirmar_agendamento(ag.pk)
+        with self.assertRaises(ValidationError):
+            confirmar_agendamento(ag.pk)
+
+    def test_concluir_lanca_uma_receita(self) -> None:
+        ag = self._novo_agendamento()
+        concluir_agendamento(ag.pk)
+        ag.refresh_from_db()
+        self.assertEqual(ag.status, 'CONCLUIDO')
+        entradas = TransacaoFinanceira.objects.filter(tipo='ENTRADA', agendamento=ag)
+        self.assertEqual(entradas.count(), 1)
+        self.assertEqual(entradas.first().valor, ag.valor_cobrado)
+
+    def test_concluir_idempotente_nao_duplica_receita(self) -> None:
+        ag = self._novo_agendamento()
+        concluir_agendamento(ag.pk)
+        with self.assertRaises(ValidationError):
+            concluir_agendamento(ag.pk)  # status já é CONCLUIDO
+        self.assertEqual(
+            TransacaoFinanceira.objects.filter(agendamento=ag, tipo='ENTRADA').count(), 1,
+        )
+
+    def test_no_show(self) -> None:
+        ag = self._novo_agendamento()
+        self.assertEqual(marcar_no_show(ag.pk).status, 'NO_SHOW')
+
+    def test_no_show_nao_vale_para_concluido(self) -> None:
+        ag = self._novo_agendamento()
+        concluir_agendamento(ag.pk)
+        with self.assertRaises(ValidationError):
+            marcar_no_show(ag.pk)
+
+    def test_cancelar_nao_vale_para_concluido(self) -> None:
+        ag = self._novo_agendamento()
+        concluir_agendamento(ag.pk)
+        with self.assertRaises(ValidationError):
+            cancelar_agendamento(ag.pk)
+
+
+class EditarAgendamentoServiceTests(_BaseAgenda):
+    """Reagendamento: move horário, detecta conflito e ignora a si mesmo."""
+
+    def test_editar_move_horario(self) -> None:
+        ag = self._novo_agendamento(proxima_segunda_10h())
+        nova = proxima_segunda_10h().replace(hour=14)
+        out = editar_agendamento(ag.pk, self.func.pk, self.servico.pk, nova)
+        self.assertEqual(out.data_hora_inicio, nova)
+        self.assertEqual(out.data_hora_fim, nova + timedelta(minutes=60))
+
+    def test_editar_detecta_conflito(self) -> None:
+        h1 = proxima_segunda_10h()
+        self._novo_agendamento(h1)                    # 10h-11h
+        ag2 = self._novo_agendamento(h1.replace(hour=14))  # 14h-15h
+        with self.assertRaises(ValidationError):
+            editar_agendamento(ag2.pk, self.func.pk, self.servico.pk, h1)
+
+    def test_editar_ignora_o_proprio(self) -> None:
+        h1 = proxima_segunda_10h()
+        ag = self._novo_agendamento(h1)
+        out = editar_agendamento(ag.pk, self.func.pk, self.servico.pk, h1)
+        self.assertEqual(out.data_hora_inicio, h1)
+
+    def test_nao_edita_concluido(self) -> None:
+        ag = self._novo_agendamento()
+        concluir_agendamento(ag.pk)
+        with self.assertRaises(ValidationError):
+            editar_agendamento(
+                ag.pk, self.func.pk, self.servico.pk,
+                proxima_segunda_10h().replace(hour=15),
+            )
+
+
+class GerarHorariosDisponiveisTests(_BaseAgenda):
+    """Geração de slots: exclui ocupados e trata entradas inválidas."""
+
+    def test_exclui_horario_ocupado(self) -> None:
+        h = proxima_segunda_10h()
+        self._novo_agendamento(h)  # ocupa 10:00-11:00
+        dias = gerar_horarios_disponiveis(self.func.pk, self.servico.pk)
+        alvo = timezone.localtime(h).date().isoformat()
+        dia = next((d for d in dias if d['data'] == alvo), None)
+        self.assertIsNotNone(dia)
+        horas = [x['hora'] for x in dia['horarios']]
+        self.assertNotIn('10:00', horas)  # exatamente ocupado
+        self.assertNotIn('10:30', horas)  # sobreposto pelo serviço de 60min
+
+    def test_profissional_sem_jornada_retorna_vazio(self) -> None:
+        u = Usuario.objects.create_user(
+            username='semj', password='abc12345', email='semj@t.com', celular='12000000009',
+        )
+        f = Funcionario.objects.create(usuario=u, especializacao='X', esta_ativo=True)
+        self.assertEqual(gerar_horarios_disponiveis(f.pk, self.servico.pk), [])
+
+    def test_ids_inexistentes_retornam_vazio(self) -> None:
+        self.assertEqual(gerar_horarios_disponiveis(99999, self.servico.pk), [])
+        self.assertEqual(gerar_horarios_disponiveis(self.func.pk, 99999), [])
+
+
+class GerenciarAgendamentoAdminTests(_BaseAgenda):
+    """Ações do admin sobre agendamentos via HTTP + permissão."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.admin = Usuario.objects.create_superuser(
+            username='adm', password='abc12345', email='adm@t.com', celular='12000000003',
+        )
+        self.http = HttpClient()
+        self.http.login(username='adm', password='abc12345')
+        self.ag = self._novo_agendamento()
+
+    def _post(self, acao):
+        return self.http.post(
+            reverse('gerenciar_agendamento', args=[self.ag.pk]),
+            {'acao': acao}, follow=True,
+        )
+
+    def test_confirmar_via_http(self) -> None:
+        resp = self._post('confirmar')
+        self.ag.refresh_from_db()
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(self.ag.status, 'CONFIRMADO')
+
+    def test_concluir_via_http_lanca_receita_e_metrica(self) -> None:
+        self._post('concluir')
+        self.ag.refresh_from_db()
+        self.assertEqual(self.ag.status, 'CONCLUIDO')
+        self.assertEqual(
+            TransacaoFinanceira.objects.filter(agendamento=self.ag, tipo='ENTRADA').count(), 1,
+        )
+        resp = self.http.get(reverse('dashboard_admin'))
+        self.assertEqual(resp.context['receita_mes'], self.ag.valor_cobrado)
+
+    def test_acao_invalida(self) -> None:
+        resp = self._post('explodir')
+        msgs = [str(m).lower() for m in resp.context['messages']]
+        self.assertTrue(any('inválida' in m for m in msgs), msgs)
+
+    def test_get_redireciona(self) -> None:
+        resp = self.http.get(reverse('gerenciar_agendamento', args=[self.ag.pk]))
+        self.assertEqual(resp.status_code, 302)
+
+    def test_nao_admin_bloqueado(self) -> None:
+        c = HttpClient()
+        c.login(username='cl', password='abc12345')  # cliente comum
+        resp = c.post(
+            reverse('gerenciar_agendamento', args=[self.ag.pk]), {'acao': 'confirmar'},
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.ag.refresh_from_db()
+        self.assertEqual(self.ag.status, 'PENDENTE')  # nada mudou
+
+
+class CancelarAgendamentoClienteTests(_BaseAgenda):
+    """Autorização: cliente não pode cancelar agendamento de outro cliente."""
+
+    def test_cliente_nao_cancela_de_outro(self) -> None:
+        ag = self._novo_agendamento()  # pertence a self.cliente
+        outro = Usuario.objects.create_user(
+            username='outro', password='abc12345', email='outro@t.com', celular='12000000004',
+        )
+        ClienteProfile.objects.create(usuario=outro)
+        c = HttpClient()
+        c.login(username='outro', password='abc12345')
+        resp = c.post(reverse('cancelar_agendamento', args=[ag.pk]), follow=True)
+        ag.refresh_from_db()
+        self.assertEqual(ag.status, 'PENDENTE')  # não foi cancelado
+        msgs = [str(m).lower() for m in resp.context['messages']]
+        self.assertTrue(any('não encontrado' in m for m in msgs), msgs)
+
+
+class DashboardAdminCadastrosTests(_BaseAgenda):
+    """Cadastro de serviço e profissional pelo painel (HTTP)."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.admin = Usuario.objects.create_superuser(
+            username='adm2', password='abc12345', email='adm2@t.com', celular='12000000005',
+        )
+        self.http = HttpClient()
+        self.http.login(username='adm2', password='abc12345')
+
+    def test_add_servico(self) -> None:
+        n = Servico.objects.count()
+        resp = self.http.post(reverse('dashboard_admin'), {
+            'add_servico': '1', 'nome': 'Spa', 'descricao': 'd',
+            'duracao_minutos': 30, 'preco': '45.00',
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(Servico.objects.count(), n + 1)
+
+    def test_add_funcionario_cria_staff(self) -> None:
+        resp = self.http.post(reverse('dashboard_admin'), {
+            'add_funcionario': '1', 'first_name': 'Ana', 'last_name': 'Paula',
+            'email': 'ana.nova@t.com', 'celular': '12999990000',
+            'especializacao': 'Manicure', 'esta_ativo': 'on',
+        })
+        self.assertEqual(resp.status_code, 302)
+        u = Usuario.objects.filter(email='ana.nova@t.com').first()
+        self.assertIsNotNone(u)
+        self.assertTrue(u.is_staff)
+        self.assertTrue(Funcionario.objects.filter(usuario=u).exists())
+
+    def test_add_funcionario_email_duplicado_recusado(self) -> None:
+        Usuario.objects.create_user(
+            username='dup', password='abc12345', email='dup@t.com', celular='12999990001',
+        )
+        n = Funcionario.objects.count()
+        resp = self.http.post(reverse('dashboard_admin'), {
+            'add_funcionario': '1', 'first_name': 'X', 'last_name': 'Y',
+            'email': 'dup@t.com', 'celular': '12999990002',
+            'especializacao': 'M', 'esta_ativo': 'on',
+        })
+        self.assertEqual(resp.status_code, 200)  # re-renderiza com erro
+        self.assertEqual(Funcionario.objects.count(), n)
+
+
+class FuncionarioFormTests(TestCase):
+    """Regressão: o e-mail do FuncionarioForm precisa respeitar o limite do model.
+
+    email é um campo *declarado* (não pertence ao model Funcionario), então não há
+    _post_clean validando contra Usuario.email (max_length=100). Sem max_length no
+    form, um e-mail acima de 100 caracteres passaria e quebraria o INSERT no
+    PostgreSQL ('value too long').
+    """
+
+    def test_email_acima_de_100_invalido(self) -> None:
+        email_longo = 'a' * 90 + '@example.com'  # 102 caracteres, formato válido
+        self.assertGreater(len(email_longo), 100)
+        form = FuncionarioForm(data={
+            'first_name': 'Ana', 'last_name': 'Lima',
+            'email': email_longo, 'celular': '11999990000',
+            'especializacao': 'Manicure', 'esta_ativo': True,
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('email', form.errors)
+
+    def test_email_dentro_do_limite_valido(self) -> None:
+        form = FuncionarioForm(data={
+            'first_name': 'Ana', 'last_name': 'Lima',
+            'email': 'ana@example.com', 'celular': '11999990000',
+            'especializacao': 'Manicure', 'esta_ativo': True,
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+
+
+class CriarAgendamentoSucessoControllerTests(_BaseAgenda):
+    """Após agendar com sucesso, o cliente cai em 'Meus Agendamentos' e vê a
+    confirmação (a home não renderiza mensagens, então redirecionar para lá
+    perderia o feedback)."""
+
+    def test_post_valido_redireciona_para_dashboard_com_mensagem(self) -> None:
+        http = HttpClient()
+        http.login(username='cl', password='abc12345')
+        hora = proxima_segunda_10h().strftime('%Y-%m-%dT%H:%M')
+        resp = http.post(reverse('criar_agendamento'), {
+            'profissionalId': self.func.pk,
+            'servicoId': self.servico.pk,
+            'hora_de_inicio': hora,
+        }, follow=True)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.request['PATH_INFO'], reverse('dashboard_cliente'))
+        msgs = [str(m).lower() for m in resp.context['messages']]
+        self.assertTrue(any('sucesso' in m for m in msgs), msgs)
+        self.assertEqual(resp.context['ativos'].count(), 1)
+
+
+class CadastroSucessoControllerTests(TestCase):
+    """Após cadastrar, o cliente é logado, cai em 'Meus Agendamentos' e vê a
+    saudação (a home não renderiza mensagens)."""
+
+    def test_cadastro_valido_loga_e_mostra_boas_vindas(self) -> None:
+        http = HttpClient()
+        resp = http.post(reverse('cadastro_cliente'), {
+            'username': 'novacliente',
+            'first_name': 'Nova', 'last_name': 'Cliente',
+            'email': 'nova@teste.com', 'celular': '(11) 98888-0000',
+            'password1': 'SenhaForte@123', 'password2': 'SenhaForte@123',
+        }, follow=True)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.request['PATH_INFO'], reverse('dashboard_cliente'))
+        msgs = [str(m).lower() for m in resp.context['messages']]
+        self.assertTrue(any('bem-vindo' in m for m in msgs), msgs)

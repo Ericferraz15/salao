@@ -23,7 +23,12 @@ from ..models import Usuario
 
 
 class ClienteRegistrationForm(UserCreationForm):
+    # max_length espelha as colunas do model Usuario. Se o form permitir mais
+    # que o banco, a validação passa mas o INSERT falha no PostgreSQL
+    # ("value too long for type character varying"). O SQLite não reclama,
+    # então o erro só apareceria em produção.
     email = forms.EmailField(
+        max_length=100,
         required=True,
         label='E-mail',
         help_text='Usado para comunicação e recuperação de conta.',
@@ -35,7 +40,7 @@ class ClienteRegistrationForm(UserCreationForm):
         label='Celular',
         help_text='Formato: (99) 99999-9999',
     )
-    first_name = forms.CharField(max_length=150, required=True, label='Nome')
+    first_name = forms.CharField(max_length=30, required=True, label='Nome')
     last_name = forms.CharField(max_length=150, required=True, label='Sobrenome')
 
     password1 = forms.CharField(
