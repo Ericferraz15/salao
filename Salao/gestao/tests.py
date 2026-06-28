@@ -31,7 +31,7 @@ from .services.agendaServices import (
 # pyrefly: ignore [missing-import]
 from .services.cadastroService import ClienteRegistrationForm
 # pyrefly: ignore [missing-import]
-from .forms import FuncionarioForm
+from .forms import FuncionarioForm, ServicoForm
 
 Usuario = get_user_model()
 
@@ -731,6 +731,15 @@ class FuncionarioFormTests(TestCase):
         })
         self.assertTrue(form.is_valid(), form.errors)
 
+    def test_email_normalizado_para_minusculas(self) -> None:
+        form = FuncionarioForm(data={
+            'first_name': 'Ana', 'last_name': 'Lima',
+            'email': '  Ana.Lima@EXEMPLO.com ', 'celular': '11999990000',
+            'especializacao': 'Manicure', 'esta_ativo': True,
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.cleaned_data['email'], 'ana.lima@exemplo.com')
+
 
 class CriarAgendamentoSucessoControllerTests(_BaseAgenda):
     """Após agendar com sucesso, o cliente cai em 'Meus Agendamentos' e vê a
@@ -769,3 +778,47 @@ class CadastroSucessoControllerTests(TestCase):
         self.assertEqual(resp.request['PATH_INFO'], reverse('dashboard_cliente'))
         msgs = [str(m).lower() for m in resp.context['messages']]
         self.assertTrue(any('bem-vindo' in m for m in msgs), msgs)
+
+
+class DashboardClienteHistoricoTests(_BaseAgenda):
+    """O histórico deve listar o agendamento mais recente primeiro."""
+
+    def _historico(self, quando, status):
+        return Agendamento.objects.create(
+            cliente=self.cliente, profissional=self.func, servico=self.servico,
+            data_hora_inicio=quando, data_hora_fim=quando + timedelta(hours=1),
+            status=status, valor_cobrado=self.servico.preco,
+        )
+
+    def test_historico_mais_recente_primeiro(self) -> None:
+        antigo = self._historico(timezone.make_aware(datetime(2026, 1, 10, 10, 0)), 'CONCLUIDO')
+        recente = self._historico(timezone.make_aware(datetime(2026, 3, 20, 10, 0)), 'CANCELADO')
+
+        http = HttpClient()
+        http.login(username='cl', password='abc12345')
+        resp = http.get(reverse('dashboard_cliente'))
+
+        historico = list(resp.context['historico'])
+        self.assertEqual([a.pk for a in historico], [recente.pk, antigo.pk])
+
+
+class ServicoFormTests(TestCase):
+    """Validação de entrada do serviço: duração positiva e preço não-negativo."""
+
+    def _dados(self, **over):
+        dados = {'nome': 'Corte', 'descricao': 'desc', 'duracao_minutos': 60, 'preco': '80.00'}
+        dados.update(over)
+        return dados
+
+    def test_valido(self) -> None:
+        self.assertTrue(ServicoForm(data=self._dados()).is_valid())
+
+    def test_duracao_zero_invalida(self) -> None:
+        form = ServicoForm(data=self._dados(duracao_minutos=0))
+        self.assertFalse(form.is_valid())
+        self.assertIn('duracao_minutos', form.errors)
+
+    def test_preco_negativo_invalido(self) -> None:
+        form = ServicoForm(data=self._dados(preco='-10.00'))
+        self.assertFalse(form.is_valid())
+        self.assertIn('preco', form.errors)

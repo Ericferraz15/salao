@@ -21,6 +21,7 @@ CORREÇÕES APLICADAS:
 """
 
 from datetime import timedelta, datetime
+from django.db import transaction
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
@@ -133,21 +134,28 @@ def criar_agendamento(
     - Preenche valor_cobrado automaticamente a partir do preço do serviço.
     - Retorna o objeto criado em vez de uma string.
     """
-    funcionario, servico = verificar_disponibilidade(
-        profissional_id, servico_id, hora_de_inicio
-    )
+    # atomic + lock no profissional serializa reservas concorrentes: uma segunda
+    # requisição para o mesmo profissional espera a primeira confirmar, então o
+    # check de conflito enxerga o agendamento recém-criado (evita double booking
+    # em corrida). Em SQLite o lock é no-op, mas a escrita já é serializada.
+    with transaction.atomic():
+        Funcionario.objects.select_for_update().filter(pk=profissional_id).first()
 
-    hora_fim = hora_de_inicio + timedelta(minutes=servico.duracao_minutos)
+        funcionario, servico = verificar_disponibilidade(
+            profissional_id, servico_id, hora_de_inicio
+        )
 
-    agendamento = Agendamento.objects.create(
-        profissional=funcionario,
-        servico=servico,
-        cliente_id=cliente_id,
-        data_hora_inicio=hora_de_inicio,   # CORRIGIDO: nome do campo
-        data_hora_fim=hora_fim,            # CORRIGIDO: nome do campo
-        valor_cobrado=servico.preco,       # NOVO: captura o preço vigente
-        status='PENDENTE',
-    )
+        hora_fim = hora_de_inicio + timedelta(minutes=servico.duracao_minutos)
+
+        agendamento = Agendamento.objects.create(
+            profissional=funcionario,
+            servico=servico,
+            cliente_id=cliente_id,
+            data_hora_inicio=hora_de_inicio,   # CORRIGIDO: nome do campo
+            data_hora_fim=hora_fim,            # CORRIGIDO: nome do campo
+            valor_cobrado=servico.preco,       # NOVO: captura o preço vigente
+            status='PENDENTE',
+        )
     return agendamento
 
 
@@ -214,20 +222,24 @@ def concluir_agendamento(agendamento_id: int) -> Agendamento:
     if agendamento.status not in ('PENDENTE', 'CONFIRMADO'):
         raise ValidationError('Só é possível concluir agendamentos pendentes ou confirmados.')
 
-    agendamento.status = 'CONCLUIDO'
-    agendamento.save(update_fields=['status'])
+    # atomic garante que a mudança de status e o lançamento da receita são
+    # gravados juntos — sem isso, uma falha entre os dois deixaria um
+    # agendamento CONCLUIDO sem a TransacaoFinanceira correspondente.
+    with transaction.atomic():
+        agendamento.status = 'CONCLUIDO'
+        agendamento.save(update_fields=['status'])
 
-    # Lança a receita só uma vez (evita duplicar caso a ação seja repetida)
-    if agendamento.valor_cobrado and not agendamento.transacoes.filter(tipo='ENTRADA').exists():
-        TransacaoFinanceira.objects.create(
-            tipo='ENTRADA',
-            valor=agendamento.valor_cobrado,
-            descricao=(
-                f'{agendamento.servico.nome} - '
-                f'{agendamento.cliente.usuario.get_full_name()}'
-            ),
-            agendamento=agendamento,
-        )
+        # Lança a receita só uma vez (evita duplicar caso a ação seja repetida)
+        if agendamento.valor_cobrado and not agendamento.transacoes.filter(tipo='ENTRADA').exists():
+            TransacaoFinanceira.objects.create(
+                tipo='ENTRADA',
+                valor=agendamento.valor_cobrado,
+                descricao=(
+                    f'{agendamento.servico.nome} - '
+                    f'{agendamento.cliente.usuario.get_full_name()}'
+                ),
+                agendamento=agendamento,
+            )
     return agendamento
 
 
@@ -269,24 +281,29 @@ def editar_agendamento(
     if agendamento.status in ['CONCLUIDO', 'CANCELADO']:
         raise ValidationError('Agendamento concluído ou cancelado não pode ser editado.')
 
-    funcionario, servico = verificar_disponibilidade(
-        novo_profissional_id,
-        novo_servico_id,
-        nova_hora_de_inicio,
-        ignorar_agendamento_id=agendamento_id,
-    )
+    # Mesmo lock de criar_agendamento: serializa a remarcação contra reservas
+    # concorrentes do mesmo profissional (evita double booking na corrida).
+    with transaction.atomic():
+        Funcionario.objects.select_for_update().filter(pk=novo_profissional_id).first()
 
-    nova_hora_fim = nova_hora_de_inicio + timedelta(minutes=servico.duracao_minutos)
+        funcionario, servico = verificar_disponibilidade(
+            novo_profissional_id,
+            novo_servico_id,
+            nova_hora_de_inicio,
+            ignorar_agendamento_id=agendamento_id,
+        )
 
-    agendamento.profissional = funcionario
-    agendamento.servico = servico
-    agendamento.data_hora_inicio = nova_hora_de_inicio   # CORRIGIDO
-    agendamento.data_hora_fim = nova_hora_fim             # CORRIGIDO
-    agendamento.valor_cobrado = servico.preco
+        nova_hora_fim = nova_hora_de_inicio + timedelta(minutes=servico.duracao_minutos)
 
-    agendamento.save(update_fields=[
-        'profissional', 'servico', 'data_hora_inicio', 'data_hora_fim', 'valor_cobrado'
-    ])
+        agendamento.profissional = funcionario
+        agendamento.servico = servico
+        agendamento.data_hora_inicio = nova_hora_de_inicio   # CORRIGIDO
+        agendamento.data_hora_fim = nova_hora_fim             # CORRIGIDO
+        agendamento.valor_cobrado = servico.preco
+
+        agendamento.save(update_fields=[
+            'profissional', 'servico', 'data_hora_inicio', 'data_hora_fim', 'valor_cobrado'
+        ])
     return agendamento
 
 def gerar_horarios_disponiveis(profissional_id: int, servico_id: int) -> list:

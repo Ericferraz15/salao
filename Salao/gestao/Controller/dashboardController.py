@@ -38,8 +38,14 @@ def dashboard_cliente_controller(request):
 
     agendamentos = listar_agendamentos_cliente(cliente_profile.pk)
 
+    # Ativos em ordem crescente (o próximo primeiro); histórico em ordem
+    # decrescente (o mais recente primeiro), como se espera de um histórico.
     ativos = agendamentos.filter(status__in=['PENDENTE', 'CONFIRMADO'])
-    historico = agendamentos.filter(status__in=['CONCLUIDO', 'CANCELADO', 'NO_SHOW'])
+    historico = (
+        agendamentos
+        .filter(status__in=['CONCLUIDO', 'CANCELADO', 'NO_SHOW'])
+        .order_by('-data_hora_inicio')
+    )
 
     return render(request, 'templateCliente/dashboard/dashboard.html', {
         'ativos': ativos,

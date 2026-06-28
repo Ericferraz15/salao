@@ -12,9 +12,26 @@ class ServicoForm(forms.ModelForm):
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do Serviço'}),
             'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Descrição'}),
-            'duracao_minutos': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Duração em min.'}),
-            'preco': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': '0.00'}),
+            'duracao_minutos': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'placeholder': 'Duração em min.'}),
+            'preco': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': '0.01', 'placeholder': '0.00'}),
         }
+
+    def clean_duracao_minutos(self):
+        # PositiveIntegerField aceita 0; duração 0 geraria slots degenerados na
+        # agenda. Exige pelo menos 1 minuto (a checagem no servidor não depende
+        # do atributo HTML 'min', que é só dica de UI).
+        duracao = self.cleaned_data['duracao_minutos']
+        if duracao < 1:
+            raise forms.ValidationError('A duração deve ser de pelo menos 1 minuto.')
+        return duracao
+
+    def clean_preco(self):
+        # DecimalField não impede negativos; um preço negativo geraria receita
+        # negativa ao concluir o agendamento.
+        preco = self.cleaned_data['preco']
+        if preco < 0:
+            raise forms.ValidationError('O preço não pode ser negativo.')
+        return preco
 
 class FuncionarioForm(forms.ModelForm):
     first_name = forms.CharField(
@@ -43,3 +60,9 @@ class FuncionarioForm(forms.ModelForm):
             'especializacao': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cargo / Especialização'}),
             'esta_ativo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+    def clean_email(self):
+        # Normaliza para minúsculas/sem espaços, igual ao cadastro de cliente,
+        # para a checagem de e-mail duplicado no controller ser consistente
+        # (evita "Joao@X.com" e "joao@x.com" como contas distintas).
+        return self.cleaned_data['email'].lower().strip()

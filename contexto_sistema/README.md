@@ -10,16 +10,20 @@ contexto) e o relatório da verificação/correção de bugs.
 
 ## TL;DR da verificação (2026-06-28)
 
-Sistema rodado e verificado: `manage.py check` ok, **54 testes** ok (eram 23),
+Sistema rodado e verificado: `manage.py check` ok, **59 testes** ok (eram 23),
 simulação ponta-a-ponta **35/35** ok, `check --deploy` sem avisos, servidor
-respondendo. Foram corrigidos **6 bugs** remanescentes + 1 hardening:
+respondendo. Foram corrigidos **10 bugs** remanescentes + hardening + cosmético:
 
 1. Timezone (UTC×local) nas métricas do painel admin
 2. `except` amplo demais mascarando erros
 3. Agendamento no passado não bloqueado no back-end
 4. `FuncionarioForm.email` sem `max_length` (500 no PostgreSQL)
 5. e 6. Mensagens de sucesso (agendar/cadastrar) perdidas ao cair na home
-7. Hardening: `SECURE_HSTS_PRELOAD`
+7. Double booking sob concorrência (atomic + select_for_update)
+8. Conclusão sem atomicidade entre status e receita
+9. Histórico do cliente em ordem invertida
+10. Serviço aceitava duração 0 / preço negativo
++ Hardening `SECURE_HSTS_PRELOAD`, e-mail do admin normalizado, formato monetário
 
 Cada correção tem teste; nos casos aplicáveis, verifiquei que o teste falha no
 código antigo. Detalhes em [RELATORIO_BUGS.md](RELATORIO_BUGS.md).

@@ -89,9 +89,38 @@ legibilidade e boas práticas), testar tudo e versionar.
   `security.W021`). Com isso, `check --deploy` (DEBUG=False + SECRET_KEY forte)
   fica **sem nenhum aviso**.
 
-### 🧹 Limpeza — comentário enganoso
-- `gerar_horarios_disponiveis` dizia "(+30 mins pra segurança)", mas só oculta
-  horários passados (sem buffer). Comentário corrigido.
+### 🐞 Bug 7 — Double booking sob concorrência *(funcional, produção)*
+- **Arquivo:** `services/agendaServices.py` (`criar_agendamento`, `editar_agendamento`)
+- **Causa:** `verificar_disponibilidade` + `create` não eram atômicos; dois POSTs
+  simultâneos para o mesmo profissional podiam passar os dois no check e criar
+  agendamentos sobrepostos.
+- **Correção:** `transaction.atomic()` + `select_for_update()` na linha do
+  profissional, serializando reservas concorrentes. No SQLite o lock é no-op
+  (a escrita já é serializada); no PostgreSQL passa a impedir a corrida.
+
+### 🐞 Bug 8 — Conclusão sem atomicidade entre status e receita *(robustez)*
+- **Arquivo:** `services/agendaServices.py` (`concluir_agendamento`)
+- **Causa:** o status virava CONCLUIDO e a `TransacaoFinanceira` era criada em
+  operações separadas; uma falha no meio deixaria agendamento concluído sem a
+  receita correspondente.
+- **Correção:** ambas as gravações dentro de `transaction.atomic()`.
+
+### 🐞 Bug 9 — Histórico do cliente em ordem cronológica invertida *(UX)*
+- **Arquivo:** `Controller/dashboardController.py`
+- **Causa:** o histórico era listado do mais antigo para o mais recente.
+- **Correção:** `order_by('-data_hora_inicio')` (mais recente primeiro).
+- **Teste:** `DashboardClienteHistoricoTests` (verificado que falha no código antigo).
+
+### 🐞 Bug 10 — Serviço aceitava duração 0 e preço negativo *(validação)*
+- **Arquivo:** `forms.py` (`ServicoForm`)
+- **Causa:** `PositiveIntegerField` aceita 0 (slots degenerados) e `DecimalField`
+  aceita negativo (receita negativa); o form não validava.
+- **Correção:** `clean_duracao_minutos` (≥ 1) e `clean_preco` (≥ 0) + `min` no widget.
+- **Teste:** `ServicoFormTests`.
+
+### 🔧 Cosmético — formato monetário
+- `receita_mes` vazia aparecia como "R$ 0.0"; com `|floatformat:2` (locale
+  pt-br) passa a "R$ 0,00".
 
 ---
 
@@ -108,7 +137,7 @@ legibilidade e boas práticas), testar tudo e versionar.
 ## 4. Resultado final (verde)
 
 ```
-manage.py test        → Ran 54 tests ... OK        (eram 23)
+manage.py test        → Ran 58 tests ... OK        (eram 23)
 simular_uso.py        → 35 verificações: 35 OK / 0 FALHA
 manage.py check       → no issues
 check --deploy        → no issues (DEBUG=False + SECRET_KEY forte)
@@ -122,19 +151,17 @@ cadastros pelo painel e fluxos de sucesso de agendar/cadastrar.
 
 ---
 
-## 5. Recomendações futuras (não alteradas — fora do escopo de "bug")
-1. **Race condition de agendamento:** `verificar_disponibilidade` + `create`
-   não é atômico; sob concorrência (PostgreSQL) dois POSTs simultâneos podem
-   criar conflito. Sugestão: `transaction.atomic()` + `select_for_update()` no
-   profissional. Não implementado para não introduzir concorrência sem teste
-   determinístico (SQLite não se beneficia).
-2. **`editar_agendamento` sem rota:** existe e é testado, mas não há
+## 5. Recomendações futuras (fora do escopo de "bug")
+1. **`editar_agendamento` sem rota:** existe e é testado, mas não há
    URL/controller que o exponha (reagendar pelo painel).
-3. **Normalização de celular:** validado por dígitos, mas gravado formatado —
+2. **Normalização de celular:** validado por dígitos, mas gravado formatado —
    "11999990000" e "(11) 99999-0000" passariam pela constraint `unique`.
-4. **`db.sqlite3` versionado** apesar do `.gitignore`: idealmente
+   (O e-mail do `FuncionarioForm` agora normaliza para minúsculas; o celular
+   poderia seguir o mesmo caminho.)
+3. **`db.sqlite3` versionado** apesar do `.gitignore`: idealmente
    `git rm --cached`.
-5. **Autorização:** todo `Funcionario` recebe `is_staff=True` e acessa o painel
+4. **Autorização:** todo `Funcionario` recebe `is_staff=True` e acessa o painel
    completo (receita, cadastros). Avaliar separar papéis dona × profissional.
-6. **Cosmético:** `receita_mes` vazia exibe "R$ 0.0"; usar `floatformat:2` para
-   "0,00".
+5. **Criação de usuário pelo Django admin:** `add_fieldsets` não inclui
+   email/first_name/last_name (obrigatórios); criar usuário por `/admin/` gera
+   registro incompleto. Fluxos primários (cadastro, painel) não são afetados.
