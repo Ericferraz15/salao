@@ -147,6 +147,10 @@ legibilidade e boas práticas), testar tudo e versionar.
   pt-br) passa a "R$ 0,00".
 - `FuncionarioForm.clean_email` passa a normalizar para minúsculas/sem espaços
   (igual ao cadastro de cliente), tornando a checagem de duplicidade consistente.
+- **Código morto removido:** `criar_agendamento_controller` montava um
+  `jornadas_json` (query + loop a cada GET) que nenhum template usava — a UI
+  carrega horários pela API. Removido junto com os imports órfãos (`json`,
+  `JornadaTrabalho`).
 
 ---
 

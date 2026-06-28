@@ -1,4 +1,3 @@
-import json
 import logging
 from datetime import datetime
 
@@ -10,7 +9,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 
 # pyrefly: ignore [missing-import]
-from ..models import ClienteProfile, Funcionario, JornadaTrabalho, Servico
+from ..models import ClienteProfile, Funcionario, Servico
 # pyrefly: ignore [missing-import]
 from ..services.agendaServices import criar_agendamento, gerar_horarios_disponiveis
 
@@ -67,6 +66,9 @@ def criar_agendamento_controller(request):
                 messages.error(request, msg)
             return redirect('criar_agendamento')
 
+    # A UI carrega os horários sob demanda via /api/horarios-disponiveis/, então
+    # só precisamos popular os selects de profissional e serviço aqui. (A antiga
+    # exportação de "jornadas_json" não era usada por nenhum template.)
     funcionarios = (
         Funcionario.objects
         .filter(esta_ativo=True)
@@ -74,31 +76,12 @@ def criar_agendamento_controller(request):
     )
     servicos = Servico.objects.all()
 
-    jornadas_db = JornadaTrabalho.objects.select_related('funcionario').all()
-    dias_semana_dict = {
-        0: 'Segunda-feira', 1: 'Terça-feira', 2: 'Quarta-feira',
-        3: 'Quinta-feira', 4: 'Sexta-feira', 5: 'Sábado', 6: 'Domingo'
-    }
-    jornadas_json: dict[str, list[dict]] = {}
-
-    for j in jornadas_db:
-        f_id = str(j.funcionario.id)
-        if f_id not in jornadas_json:
-            jornadas_json[f_id] = []
-
-        jornadas_json[f_id].append({
-            'dia_semana': dias_semana_dict.get(j.dia_da_semana, str(j.dia_da_semana)),
-            'hora_inicio': j.hora_inicio.strftime('%H:%M'),
-            'hora_fim': j.hora_fim.strftime('%H:%M')
-        })
-
     return render(
         request,
         'templateCliente/agendamento/criar_agendamento.html',
         context={
             'funcionarios': funcionarios,
             'servicos': servicos,
-            'jornadas_json': json.dumps(jornadas_json)
         },
     )
 
