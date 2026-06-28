@@ -319,7 +319,7 @@ class PermissaoViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_cadastro_redireciona_usuario_logado(self) -> None:
-        user = Usuario.objects.create_user(
+        Usuario.objects.create_user(
             username='logado', password='abc12345',
             email='logado@t.com', celular='11000000040',
         )

@@ -172,6 +172,8 @@ simular_uso.py        → 35 verificações: 35 OK / 0 FALHA
 manage.py check       → no issues
 check --deploy        → no issues (DEBUG=False + SECRET_KEY forte)
 makemigrations --check→ No changes detected
+pyflakes (app+scripts)→ sem avisos (imports/variáveis órfãos removidos)
+docker build          → conclui (python:3.13-slim)
 ```
 
 Cobertura adicionada: transições de status, **lançamento de receita +

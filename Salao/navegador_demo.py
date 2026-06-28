@@ -16,7 +16,6 @@ Como rodar (a partir de salao/Salao/):
 """
 
 import os
-import sys
 import threading
 import time
 import urllib.request
@@ -31,7 +30,6 @@ from django.contrib.auth import get_user_model
 from django.core.management import call_command
 
 from gestao.models import (
-    ClienteProfile,
     Funcionario,
     JornadaTrabalho,
     Servico,

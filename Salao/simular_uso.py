@@ -50,7 +50,6 @@ from gestao.models import (
     Servico,
 )
 from gestao.services.agendaServices import (
-    cancelar_agendamento,
     criar_agendamento,
     editar_agendamento,
     gerar_horarios_disponiveis,
