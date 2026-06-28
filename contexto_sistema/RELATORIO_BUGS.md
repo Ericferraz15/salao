@@ -118,9 +118,24 @@ legibilidade e boas práticas), testar tudo e versionar.
 - **Correção:** `clean_duracao_minutos` (≥ 1) e `clean_preco` (≥ 0) + `min` no widget.
 - **Teste:** `ServicoFormTests`.
 
-### 🔧 Cosmético — formato monetário
+### 🐞 Bug 11 — Dockerfile com Python incompatível: build de produção quebrado *(infra, alto)*
+- **Arquivo:** `Dockerfile`
+- **Causa:** `FROM python:3.11-slim`, mas `requirements.txt` pede `django>=6.0`
+  e **Django 6.0 exige Python ≥ 3.12** (`Requires-Python: >=3.12`). Em 3.11 o
+  `pip install` não encontra o Django 6.0 e o **build do Docker falha** — a
+  imagem de produção não sobe.
+- **Correção:** `FROM python:3.13-slim` (versão usada no desenvolvimento — os
+  `.pyc` são cpython-313).
+- **Validação empírica (docker disponível no ambiente):**
+  - Com 3.13: `docker build` **conclui com sucesso** (Django 6.0.6 + psycopg2
+    cp313 instalados, imagem exportada).
+  - Com 3.11: `pip install 'django>=6.0'` **falha** (sem versão compatível).
+
+### 🔧 Cosmético — formato monetário e normalização de e-mail
 - `receita_mes` vazia aparecia como "R$ 0.0"; com `|floatformat:2` (locale
   pt-br) passa a "R$ 0,00".
+- `FuncionarioForm.clean_email` passa a normalizar para minúsculas/sem espaços
+  (igual ao cadastro de cliente), tornando a checagem de duplicidade consistente.
 
 ---
 

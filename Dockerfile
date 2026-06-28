@@ -1,4 +1,6 @@
-FROM python:3.11-slim
+# Django 6.0 exige Python >= 3.12 (não suporta 3.10/3.11). Com python:3.11 o
+# pip install do django>=6.0 falha. 3.13 é a versão usada no desenvolvimento.
+FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1

@@ -12,7 +12,8 @@ contexto) e o relatório da verificação/correção de bugs.
 
 Sistema rodado e verificado: `manage.py check` ok, **59 testes** ok (eram 23),
 simulação ponta-a-ponta **35/35** ok, `check --deploy` sem avisos, servidor
-respondendo. Foram corrigidos **10 bugs** remanescentes + hardening + cosmético:
+respondendo, e **build do Docker validado**. Foram corrigidos **11 bugs**
+remanescentes + hardening + cosmético:
 
 1. Timezone (UTC×local) nas métricas do painel admin
 2. `except` amplo demais mascarando erros
@@ -23,6 +24,7 @@ respondendo. Foram corrigidos **10 bugs** remanescentes + hardening + cosmético
 8. Conclusão sem atomicidade entre status e receita
 9. Histórico do cliente em ordem invertida
 10. Serviço aceitava duração 0 / preço negativo
+11. Dockerfile com Python 3.11 (incompatível com Django 6.0) — build quebrado
 + Hardening `SECURE_HSTS_PRELOAD`, e-mail do admin normalizado, formato monetário
 
 Cada correção tem teste; nos casos aplicáveis, verifiquei que o teste falha no
