@@ -1,3 +1,11 @@
+"""
+urls.py (app gestao) — cada URL do site apontando para seu controller.
+
+O `name=` de cada rota é como os templates a referenciam
+({% url 'criar_agendamento' %}) — assim dá para mudar o endereço sem
+caçar links espalhados pelo HTML.
+"""
+
 from django.urls import path
 from django.contrib.auth import views as auth_views
 # pyrefly: ignore [missing-import]

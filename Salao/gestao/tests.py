@@ -22,7 +22,7 @@ from .models import (
 )
 
 # pyrefly: ignore [missing-import]
-from .services.agendaServices import (
+from .services.agendaService import (
     criar_agendamento,
     cancelar_agendamento,
     confirmar_agendamento,

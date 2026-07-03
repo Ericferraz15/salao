@@ -1,9 +1,17 @@
+"""
+homeController.py — páginas públicas: home (vitrine) e galeria.
+
+São as únicas telas que não exigem login: qualquer visitante vê os
+serviços, os trabalhos e o contato do salão.
+"""
+
 from django.shortcuts import render
 # pyrefly: ignore [missing-import]
 from ..models import Servico
 
 
 def home(request):
+    """Landing page: hero, sobre, vitrine de serviços (com foto) e contato."""
     servicos = Servico.objects.all()
     return render(request, 'templateCliente/home/home.html', {'servicos': servicos})
 

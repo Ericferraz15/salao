@@ -17,7 +17,6 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
-from django.utils import timezone
 
 # pyrefly: ignore [missing-import]
 from ..models import TransacaoFinanceira
@@ -105,7 +104,7 @@ def lancar_transacao(tipo: str, valor, descricao: str) -> TransacaoFinanceira:
     """Registra uma entrada/saída manual no caixa, validando a entrada.
 
     Levanta ValidationError com mensagem amigável (o controller converte
-    em mensagem na tela) — mesmo padrão do agendaServices.
+    em mensagem na tela) — mesmo padrão do agendaService.
     """
     if tipo not in ('ENTRADA', 'SAIDA'):
         raise ValidationError('Tipo de transação inválido.')

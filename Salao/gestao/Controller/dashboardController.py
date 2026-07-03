@@ -4,7 +4,7 @@ dashboardController.py — telas logadas: painel do CLIENTE e painel da DONA.
 Lembrete da arquitetura (Controller fino, service gordo):
 - o controller recebe o request, valida o básico, chama o service e
   devolve render/redirect com mensagens;
-- as regras de negócio de verdade moram em services/ (agendaServices,
+- as regras de negócio de verdade moram em services/ (agendaService,
   financeiroService, estoqueService).
 
 Rotas atendidas aqui (ver gestao/urls.py):
@@ -31,7 +31,7 @@ from ..models import (
     Produto, Servico, TransacaoFinanceira,
 )
 # pyrefly: ignore [missing-import]
-from ..services.agendaServices import (
+from ..services.agendaService import (
     listar_agendamentos_cliente,
     cancelar_agendamento,
     confirmar_agendamento,

@@ -6,7 +6,7 @@ Simulação de uso REAL do sistema, ponta a ponta.
 Exercita as duas camadas:
   1. HTTP (django.test.Client) — como um navegador de verdade faria:
      login, abrir páginas, enviar formulários, chamar a API de horários.
-  2. Camada de serviços (agendaServices) — regras de negócio diretas:
+  2. Camada de serviços (agendaService) — regras de negócio diretas:
      conflito de horário, fora do expediente, dia sem jornada, edição.
 
 Os dados criados ficam PERSISTIDOS no banco local (SQLite) para que possam
@@ -49,7 +49,7 @@ from gestao.models import (
     JornadaTrabalho,
     Servico,
 )
-from gestao.services.agendaServices import (
+from gestao.services.agendaService import (
     criar_agendamento,
     editar_agendamento,
     gerar_horarios_disponiveis,

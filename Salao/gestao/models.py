@@ -1,3 +1,21 @@
+"""
+models.py — as TABELAS do sistema, descritas como classes Python.
+
+Mapa mental de quem se relaciona com quem:
+
+    Usuario (login) ──1:1── ClienteProfile ─┐
+    Usuario (login) ──1:1── Funcionario ────┤
+                             │              ├──> Agendamento <── Servico
+    JornadaTrabalho ──N:1────┘              │         │
+                                            │         └──> TransacaoFinanceira
+    Produto (estoque, independente)         │               (receita lançada
+                                            └───────────────na conclusão)
+
+Cada classe vira uma tabela no banco (via migrations); cada atributo
+vira uma coluna. Regras que envolvem VÁRIOS models ficam nos services —
+aqui só entram os campos e pequenas conveniências (@property).
+"""
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 # pyrefly: ignore [missing-import]
@@ -5,15 +23,16 @@ from .utils.constants import STATUS_CHOICES, DIAS_SEMANA
 
 
 class Usuario(AbstractUser):
-    """
-    Modelo de usuário customizado. Sempre defina AUTH_USER_MODEL no início
-    do projeto — mudar depois é trabalhoso.
+    """Usuário de login (clientes, profissionais e a dona).
 
-    CORRIGIDO:
-    - email marcado como unique=True (estava sem essa constraint, permitindo
-      dois usuários com o mesmo e-mail — falha de integridade grave).
-    - celular continua unique, mas agora blank=True para permitir cadastros
-      sem telefone caso necessário (ajuste conforme a regra de negócio).
+    Herda de AbstractUser: username, senha (com hash), e-mail etc. vêm
+    de graça. Definir AUTH_USER_MODEL desde o início do projeto é
+    importante — trocar depois de ter dados é trabalhoso.
+
+    - email é unique: é o identificador de contato (e o login das contas
+      novas — o cadastro define username = e-mail).
+    - celular é unique, mas opcional (blank/null): nem todo perfil
+      administrativo precisa de telefone.
     """
 
     groups = models.ManyToManyField(
@@ -36,8 +55,6 @@ class Usuario(AbstractUser):
     first_name = models.CharField(max_length=30, verbose_name='nome')
     last_name = models.CharField(max_length=150, verbose_name='sobrenome')
 
-    # CORRIGIDO: unique=True — e-mail é usado como identificador de contato,
-    # dois clientes com o mesmo e-mail causam confusão nos agendamentos.
     email = models.EmailField(max_length=100, unique=True)
 
     celular = models.CharField(max_length=15, unique=True, null=True, blank=True, verbose_name='celular')
@@ -60,8 +77,11 @@ class Usuario(AbstractUser):
 
 
 class ClienteProfile(models.Model):
-    """
-    Perfil estendido do cliente. Padrão OneToOne é correto aqui.
+    """Marca um Usuario como CLIENTE do salão (padrão "profile").
+
+    Por que não usar o Usuario direto? Porque nem todo usuário é cliente
+    (a dona e as profissionais também têm login). O OneToOne funciona
+    como um "crachá": quem tem ClienteProfile pode agendar.
     """
     usuario = models.OneToOneField(
         Usuario,
@@ -79,9 +99,11 @@ class ClienteProfile(models.Model):
 
 
 class Funcionario(models.Model):
-    """
-    CORRIGIDO: campo renomeado de 'estaAtivo' para 'esta_ativo'
-    seguindo o padrão snake_case do Python/Django.
+    """Profissional que atende no salão (também é um Usuario, via 1:1).
+
+    esta_ativo permite "desligar" uma profissional sem apagar o
+    histórico dela: inativa some das opções de agendamento, mas os
+    agendamentos antigos continuam íntegros.
     """
     usuario = models.OneToOneField(
         Usuario,
@@ -100,7 +122,6 @@ class Funcionario(models.Model):
         verbose_name='foto do profissional',
     )
 
-    # CORRIGIDO: snake_case (era camelCase 'estaAtivo' — inconsistente com Django)
     esta_ativo = models.BooleanField(default=True, verbose_name='está ativo')
 
     class Meta:
@@ -112,9 +133,10 @@ class Funcionario(models.Model):
 
 
 class Servico(models.Model):
-    """
-    Serviços oferecidos pelo salão.
-    CORRIGIDO: verbose_name com acento (era 'Descricao do Servico').
+    """Serviço do catálogo (ex.: Esmaltação em Gel, 60 min, R$ 70).
+
+    A duração alimenta a grade de horários (um serviço de 120 min ocupa
+    4 slots de 30); o preço vira o valor_cobrado quando alguém agenda.
     """
     nome = models.CharField(max_length=100, verbose_name='nome do serviço')
     descricao = models.TextField(verbose_name='descrição do serviço')
@@ -155,13 +177,14 @@ class Servico(models.Model):
 
 
 class Agendamento(models.Model):
-    """
-    CORRIGIDO:
-    - Campos renomeados de hora_de_inicio/hora_de_fim para data_hora_inicio/data_hora_fim
-      (estava inconsistente: o model usava data_hora_*, mas os services
-      usavam hora_de_inicio/hora_de_fim — causando AttributeError em runtime).
-    - Adicionado db_index=True nos campos mais consultados.
-    - valor_cobrado pode ser nulo até confirmação (blank=True, null=True).
+    """A reserva em si: quem, com quem, o quê e quando.
+
+    - data_hora_inicio/fim são aware (UTC no banco, SP na exibição).
+    - valor_cobrado congela o preço do serviço no momento da reserva.
+    - status segue o ciclo de STATUS_CHOICES; as transições válidas são
+      controladas pelo agendaService (não mude o status "na mão").
+    - db_index nos campos mais filtrados acelera as consultas de
+      conflito e das listagens.
     """
     cliente = models.ForeignKey(
         ClienteProfile,
@@ -181,7 +204,6 @@ class Agendamento(models.Model):
         verbose_name='serviço',
     )
 
-    # CORRIGIDO: nomenclatura consistente com o restante do modelo
     data_hora_inicio = models.DateTimeField(
         verbose_name='início do agendamento',
         db_index=True,
@@ -229,10 +251,12 @@ class Agendamento(models.Model):
 
 
 class JornadaTrabalho(models.Model):
-    """
-    CORRIGIDO: DIAS_SEMANA agora começa em 0 (Monday=0) para alinhar
-    com datetime.weekday() — o código original usava 1-7 mas weekday()
-    retorna 0-6, o que causava nunca encontrar a jornada correta na verificação.
+    """Expediente semanal de uma profissional (uma linha por dia).
+
+    Ex.: (Eduarda, dia 0=segunda, 09:00, 18:00). Sem jornada cadastrada
+    a profissional NÃO aparece com horários para as clientes.
+    ATENÇÃO: dia_da_semana usa 0-6 (0=segunda), o mesmo padrão de
+    datetime.weekday() — usar 1-7 aqui já quebrou o sistema no passado.
     """
     funcionario = models.ForeignKey(
         Funcionario,
@@ -254,9 +278,10 @@ class JornadaTrabalho(models.Model):
 
 
 class Produto(models.Model):
-    """
-    CORRIGIDO: nome da classe no singular (era 'Produtos' — viola a
-    convenção Django de usar singular para nomes de modelo).
+    """Item de estoque (venda ou uso interno) com alerta de reposição.
+
+    Quando quantidade_estoque < estoque_minimo, o painel mostra o aviso
+    "repor!" (via @property abaixo_estoque_minimo).
     """
     nome = models.CharField(max_length=100, verbose_name='nome do produto')
     descricao = models.TextField(verbose_name='descrição do produto')
@@ -280,11 +305,12 @@ class Produto(models.Model):
 
 
 class TransacaoFinanceira(models.Model):
-    """
-    CORRIGIDO:
-    - Renomeado de 'TransicaoFinanceira' para 'TransacaoFinanceira'
-      ('transição' = mudança de estado; 'transação' = operação financeira).
-    - Adicionado agendamento FK opcional para rastrear origem da receita.
+    """Livro-caixa: cada linha é dinheiro que ENTROU ou SAIU.
+
+    Entra de dois jeitos: automático (agendamento concluído) ou manual
+    (dona lança venda/despesa pelo painel). A FK opcional `agendamento`
+    diz de onde veio a receita — e permite a checagem de idempotência
+    (não lançar duas vezes a receita do mesmo atendimento).
     """
     TIPO_CHOICES = [
         ('ENTRADA', 'Entrada'),

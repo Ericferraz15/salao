@@ -1,20 +1,9 @@
 """
-cadastroController.py
+cadastroController.py — rota /cadastro/ (criação de conta do cliente).
 
-CORREÇÕES APLICADAS:
-1. [BUG] O controller extraía first_name, last_name, email do cleaned_data e
-   os reatribuía manualmente — isso é desnecessário porque form.save() já
-   cuida disso. Código duplicado removido.
-
-2. [BUG] ClienteProfile.objects.create(telefone=...) — o model não tem campo
-   'telefone', causava TypeError. Corrigido: ClienteProfile não precisa
-   de campos extras além do usuario.
-
-3. [SEGURANÇA] Usuário autenticado acessando /cadastro/ agora é redirecionado
-   em vez de ver o formulário vazio (sem sentido lógico).
-
-4. [UX] Erros de formulário agora exibem o label do campo em português
-   em vez do nome do campo interno.
+Fluxo: GET mostra o formulário -> POST valida com o
+ClienteRegistrationForm (services/cadastroService.py) -> cria Usuario +
+ClienteProfile -> já faz o login -> manda para "Meus Agendamentos".
 """
 
 from django.contrib import messages
@@ -27,7 +16,7 @@ from ..services.cadastroService import ClienteRegistrationForm
 
 
 def cliente_registro_controller(request):
-    # NOVO: redireciona usuário já autenticado
+    # Quem já está logado não tem o que fazer na tela de cadastro
     if request.user.is_authenticated:
         return redirect('home')
 
@@ -38,11 +27,11 @@ def cliente_registro_controller(request):
             # falhar, o usuário não fica órfão (sem perfil e com e-mail/celular
             # "presos" pela constraint unique, bloqueando uma nova tentativa).
             with transaction.atomic():
-                # CORRIGIDO: form.save() já atribui todos os campos corretamente
                 user = form.save()
-                # CORRIGIDO: ClienteProfile só precisa do usuario — sem 'telefone'
                 ClienteProfile.objects.create(usuario=user)
 
+            # login() abre a sessão — a cliente já sai da tela autenticada,
+            # sem precisar digitar e-mail e senha de novo.
             login(request, user)
             messages.success(
                 request,
@@ -53,7 +42,8 @@ def cliente_registro_controller(request):
             # agendar.
             return redirect('dashboard_cliente')
 
-        # CORRIGIDO: usa o label do campo (em português) na mensagem de erro
+        # Mostra os erros com o LABEL do campo ("Celular: ...") em vez do
+        # nome interno ("celular: ..."), que soaria técnico para a cliente.
         for field, errors in form.errors.items():
             label = form.fields[field].label if field in form.fields else field
             for error in errors:

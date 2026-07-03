@@ -1,3 +1,12 @@
+"""
+agendaController.py — rotas de AGENDAMENTO do cliente.
+
+- /agendar/ (GET) renderiza a tela com os cards de serviço/profissional;
+  (POST) recebe a escolha e pede ao agendaService para criar a reserva.
+- /api/horarios-disponiveis/ é a mini-API JSON que o JavaScript da tela
+  chama para montar os chips de dia/horário.
+"""
+
 import logging
 from datetime import datetime
 
@@ -11,7 +20,7 @@ from django.utils import timezone
 # pyrefly: ignore [missing-import]
 from ..models import ClienteProfile, Funcionario, Servico
 # pyrefly: ignore [missing-import]
-from ..services.agendaServices import criar_agendamento, gerar_horarios_disponiveis
+from ..services.agendaService import criar_agendamento, gerar_horarios_disponiveis
 
 
 logger = logging.getLogger(__name__)

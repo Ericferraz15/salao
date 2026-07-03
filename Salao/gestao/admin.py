@@ -1,12 +1,10 @@
 """
-admin.py
+admin.py — configura o Django Admin (/admin/), o painel TÉCNICO.
 
-CORREÇÕES APLICADAS:
-1. Removida importação duplicada de UserAdmin.
-2. Removido 'from .models import *' — wildcard import dificulta rastrear
-   de onde vem cada model e pode causar conflitos.
-3. Adicionado Produto ao admin (estava faltando).
-4. Corrigido campo 'estaAtivo' para 'esta_ativo' no list_display.
+Não confundir com o /admin-dashboard/ (o painel bonito da dona): o
+Django Admin é a ferramenta interna de manutenção, que dá acesso cru a
+todas as tabelas. Cada classe abaixo diz como um model aparece lá
+(colunas da listagem, filtros laterais, campo de busca).
 """
 
 from django.contrib import admin
@@ -34,7 +32,12 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
         ('Dados de Contato', {'fields': ('celular',)}),
     )
+    # O formulário de CRIAÇÃO padrão do UserAdmin só pede username/senha —
+    # mas aqui nome, sobrenome e e-mail são obrigatórios (e o e-mail é
+    # unique). Sem estes campos, criar usuário pelo /admin/ gerava
+    # registro incompleto, com e-mail vazio.
     add_fieldsets = UserAdmin.add_fieldsets + (
+        ('Dados Pessoais', {'fields': ('first_name', 'last_name', 'email')}),
         ('Dados de Contato', {'fields': ('celular',)}),
     )
 
