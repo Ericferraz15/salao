@@ -138,14 +138,19 @@ LOGIN_URL = 'login_cliente'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 
-# ─── SEGURANÇA EM PRODUÇÃO ────────────────────────────────────────────────────
-if not DEBUG:
+# ─── SEGURANÇA HTTPS (opcional) ───────────────────────────────────────────────
+# Ligue com DJANGO_HTTPS=1 SOMENTE quando o site estiver atrás de HTTPS de
+# verdade (domínio com certificado). Antes isso era automático com
+# DEBUG=False, o que QUEBRAVA o deploy em rede local via http:// — os
+# cookies "Secure" impedem o login e SECURE_SSL_REDIRECT manda todo mundo
+# para um https que não existe.
+if os.environ.get('DJANGO_HTTPS', '') == '1':
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    # Completa o HSTS (já temos max-age de 1 ano + includeSubDomains); permite
-    # inscrição na preload list dos navegadores e silencia o aviso security.W021.
+    # Completa o HSTS (max-age de 1 ano + includeSubDomains); permite
+    # inscrição na preload list e silencia o aviso security.W021.
     SECURE_HSTS_PRELOAD = True
     SECURE_SSL_REDIRECT = True
 

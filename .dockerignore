@@ -1,0 +1,22 @@
+# O que NÃO entra na imagem Docker (build mais rápido, imagem menor e
+# sem vazar dados de desenvolvimento).
+.git
+.venv
+venv
+**/__pycache__
+*.pyc
+
+# Banco local de dev e uploads — em produção o banco é o PostgreSQL do
+# compose e a mídia vive no volume montado, nunca dentro da imagem.
+Salao/db.sqlite3
+db.sqlite3
+Salao/media
+Salao/staticfiles
+
+# Segredos e configs locais
+.env
+.env.local
+
+# Docs/artefatos que a imagem não usa
+contexto_sistema
+README.md

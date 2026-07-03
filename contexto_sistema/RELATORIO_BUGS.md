@@ -197,3 +197,95 @@ cadastros pelo painel e fluxos de sucesso de agendar/cadastrar.
 5. **Criação de usuário pelo Django admin:** `add_fieldsets` não inclui
    email/first_name/last_name (obrigatórios); criar usuário por `/admin/` gera
    registro incompleto. Fluxos primários (cadastro, painel) não são afetados.
+
+---
+
+# Rodada 2 — 2026-07-03 (features + nova varredura de bugs)
+
+**Escopo:** cadastro simplificado, fotos de serviços/profissionais,
+painel admin completo, backend didático, melhorias de front e nova
+caça a bugs (com foco em deploy).
+
+## Bugs encontrados e corrigidos nesta rodada
+
+### 🐞 Bug 13 — Container Docker não subia (entrypoint no diretório errado) *(infra, alto)*
+- **Arquivo:** `entrypoint.sh`
+- **Causa:** `COPY . /app` deixa o `manage.py` em `/app/Salao/`, mas o
+  entrypoint rodava `python manage.py migrate` em `/app` → *"can't open
+  file 'manage.py'"*. A rodada anterior validou apenas o `docker build`
+  (que passa); o erro só aparecia no `docker compose up`.
+- **Correção:** `cd /app/Salao` no início do entrypoint.
+- **Validação empírica:** imagem construída e container executado —
+  migra do zero (0001→0007), coleta 155 estáticos e o Gunicorn escuta
+  na 8000.
+
+### 🐞 Bug 14 — Login impossível em produção via HTTP (rede local) *(funcional, alto)*
+- **Arquivo:** `Salao/settings.py`
+- **Causa:** com `DEBUG=False`, o settings ligava incondicionalmente
+  `SESSION_COOKIE_SECURE`/`CSRF_COOKIE_SECURE` (cookies só via HTTPS) e
+  `SECURE_SSL_REDIRECT`. No deploy real do salão (notebook servindo
+  `http://ip-da-rede:8000`) ninguém conseguiria logar e o site
+  redirecionaria para um https inexistente.
+- **Correção:** endurecimento HTTPS agora é opt-in pela env
+  `DJANGO_HTTPS=1` (documentado no `.env.example`).
+
+### 🐞 Bug 15 — `simular_uso.py` apagava dados REAIS *(perda de dados)*
+- **Causa:** a limpeza fazia `Agendamento.objects.all().delete()` e
+  `JornadaTrabalho.objects.all().delete()` — rodar a simulação em um
+  banco com dados de verdade zerava a agenda inteira do salão.
+- **Correção:** a limpeza remove apenas o que a simulação criou
+  (usuários `@sim.salao`, serviços `[SIM]` e seus derivados), com
+  guarda para `ProtectedError`.
+
+### 🐞 Bug 16 — Imagem Docker inchada e com dados de dev *(infra/segurança)*
+- **Causa:** sem `.dockerignore`, o `COPY .` levava `.venv` (77 MB),
+  `db.sqlite3` (dados reais de dev!), `media/` e `.git` para a imagem.
+- **Correção:** `.dockerignore` criado; container recriado migra um
+  banco limpo.
+
+### 🐞 Bug 17 — `db.sqlite3` versionado no git *(higiene/segurança)*
+- **Causa:** o arquivo foi commitado antes do `.gitignore` cobrir o
+  padrão (arquivo rastreado ignora o gitignore). Era a recomendação #3
+  da rodada anterior, nunca aplicada.
+- **Correção:** `git rm --cached Salao/db.sqlite3`.
+
+### 🐞 Bug 18 — Criar usuário pelo Django admin gerava registro sem e-mail *(admin)*
+- **Causa:** `add_fieldsets` do `CustomUserAdmin` não incluía
+  first_name/last_name/email (obrigatórios no model). Era a
+  recomendação #5 da rodada anterior.
+- **Correção:** campos adicionados ao formulário de criação do /admin/.
+
+### 🐞 Bug 19 — Conta staff em /agendar/ recebia "contate o suporte" *(UX)*
+- **Causa:** a dona não tem `ClienteProfile`; ao clicar em Agendar caía
+  numa mensagem de erro genérica e assustadora.
+- **Correção:** staff é redirecionada ao painel com mensagem clara; o
+  botão "Agendar" da navbar não aparece para contas staff.
+
+### 🔧 Também aplicados
+- Normalização do celular no cadastro (só dígitos — fecha a
+  recomendação #2 da rodada anterior: "(11) 99999-0000" e
+  "11999990000" agora são o mesmo número).
+- `.env.example` com instruções e `DJANGO_DEBUG=False` como padrão
+  sugerido para produção.
+
+## Features desta rodada (resumo)
+1. Cadastro simplificado: sem username (e-mail é o login), senha 6+,
+   botão mostrar senha, login por e-mail OU username (`backends.py`).
+2. Fotos: `Servico.foto` e `Funcionario.foto` (migração 0007) + upload
+   pelo painel + tela de agendar com cards visuais + seção "Nossa
+   Equipe" na home + fotos no painel e no dashboard do cliente.
+3. Painel admin completo: agenda do dia com WhatsApp, receita
+   hoje/mês, despesas, lucro, meta com barra (R$ 5.000), gráfico 7
+   dias, caixa manual, estoque com alerta e +/− travado, jornadas.
+4. Backend didático: services renomeados para o padrão `xxxService.py`,
+   docstrings que explicam (fuso, N+1, locks, idempotência), README.
+
+## Resultado final (verde)
+```
+manage.py test        → Ran 105 tests ... OK      (eram 63)
+simular_uso.py        → 35 verificações: 35 OK / 0 FALHA
+manage.py check       → no issues
+makemigrations --check→ No changes detected
+pyflakes              → limpo
+docker build + run    → migra 0001→0007 e sobe o Gunicorn
+```

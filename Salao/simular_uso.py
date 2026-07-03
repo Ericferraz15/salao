@@ -38,6 +38,7 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db.models import ProtectedError
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
@@ -97,11 +98,23 @@ def _proximo_dia_semana(alvo: int, hora: int = 10):
 # -------------------------------------------------------------------------
 def limpar_dados_simulacao() -> None:
     secao('0. LIMPEZA DE DADOS ANTERIORES DA SIMULAÇÃO')
-    Agendamento.objects.all().delete()
-    JornadaTrabalho.objects.all().delete()
-    # Remove usuários da simulação (mantém qualquer outro que já existisse).
+    # Apaga SOMENTE o que a própria simulação criou (usuários @sim.salao e
+    # serviços [SIM]) — agendamentos e jornadas de dados reais ficam
+    # intocados. Deletar o Usuario cascateia para ClienteProfile/
+    # Funcionario e, por consequência, para agendamentos e jornadas deles.
+    Agendamento.objects.filter(
+        cliente__usuario__email__endswith='@sim.salao'
+    ).delete()
+    JornadaTrabalho.objects.filter(
+        funcionario__usuario__email__endswith='@sim.salao'
+    ).delete()
     apagados, _ = Usuario.objects.filter(email__endswith='@sim.salao').delete()
-    Servico.objects.filter(nome__startswith='[SIM]').delete()
+    try:
+        Servico.objects.filter(nome__startswith='[SIM]').delete()
+    except ProtectedError:
+        # Algum cliente REAL agendou um serviço [SIM] (FK é PROTECT):
+        # mantemos o serviço para não corromper esse agendamento.
+        print('  (aviso) serviços [SIM] com agendamentos reais foram mantidos.')
     print(f'  Dados de simulações anteriores removidos ({apagados} registros de usuário).')
 
 
@@ -143,7 +156,11 @@ def montar_salao():
                 funcionario=f, dia_da_semana=dia,
                 hora_inicio='09:00', hora_fim='18:00',
             )
-    total_jornadas = JornadaTrabalho.objects.count()
+    # Conta SÓ as jornadas das profissionais da simulação — o banco pode
+    # ter jornadas reais (seed/produção) que não são apagadas na limpeza.
+    total_jornadas = JornadaTrabalho.objects.filter(
+        funcionario__usuario__email__endswith='@sim.salao'
+    ).count()
     checa('Jornadas de trabalho cadastradas (seg-sex)', total_jornadas == 10,
           f'{total_jornadas} jornadas')
 

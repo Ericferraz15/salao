@@ -61,16 +61,19 @@ def anexar_foto(instancia, caminho_relativo: str) -> None:
 def seed():
     # ── Dona do salão (admin) + registro de profissional ────────────────
     if not Usuario.objects.filter(username='admin').exists():
-        admin = Usuario.objects.create_superuser(
+        Usuario.objects.create_superuser(
             'admin', 'admin@salao.com', 'admin123',
             first_name='Eduarda', last_name='Ferraz', celular='11999990000',
         )
-        Funcionario.objects.create(
-            usuario=admin, especializacao='Nail Designer', esta_ativo=True,
-        )
         print('Admin criado (admin / admin123).')
 
-    dona = Funcionario.objects.select_related('usuario').first()
+    admin = Usuario.objects.get(username='admin')
+    # Buscar a dona PELO usuário admin (e não com .first()): o banco pode
+    # ter outros funcionários de teste, e .first() pegaria qualquer um.
+    dona, _ = Funcionario.objects.get_or_create(
+        usuario=admin,
+        defaults={'especializacao': 'Nail Designer', 'esta_ativo': True},
+    )
     anexar_foto(dona, 'images/dona.jpg')
 
     # ── Jornada de trabalho: segunda(0) a sábado(5), 09h-18h ────────────

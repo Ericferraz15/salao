@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# O projeto Django (manage.py) fica em /app/Salao — o COPY do Dockerfile
+# leva o repositório inteiro para /app. Sem este cd, migrate/collectstatic
+# falhavam com "can't open file 'manage.py'" e o container não subia.
+cd /app/Salao
+
 echo "[entrypoint] Aplicando migrações do banco de dados..."
 python manage.py migrate --noinput
 
