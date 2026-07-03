@@ -1,16 +1,15 @@
 """
-constants.py
+constants.py — valores fixos usados em vários pontos do sistema.
 
-CORREÇÃO CRÍTICA:
-DIAS_SEMANA agora usa 0-6 em vez de 1-7.
-datetime.weekday() retorna 0 para segunda-feira e 6 para domingo.
-O código original usava 1-7, então a query de JornadaTrabalho
-nunca encontrava o dia correto — o profissional "nunca trabalhava".
-
-Após gerar uma nova migration, reinsira os dados de JornadaTrabalho
-no banco com os novos valores (0-6).
+Centralizar aqui evita "números mágicos" espalhados: quando a regra
+mudar (ex.: nova meta), muda-se em um lugar só.
 """
 
+from decimal import Decimal
+
+# Ciclo de vida de um agendamento:
+# PENDENTE -> CONFIRMADO -> CONCLUIDO (gera receita)
+# e os desvios: CANCELADO, NO_SHOW (cliente faltou).
 STATUS_CHOICES = (
     ('PENDENTE', 'Pendente (aguardando confirmação)'),
     ('CONFIRMADO', 'Confirmado'),
@@ -19,7 +18,8 @@ STATUS_CHOICES = (
     ('NO_SHOW', 'Não compareceu'),
 )
 
-# CORRIGIDO: 0-6 alinhado com datetime.weekday()
+# 0-6 alinhado com datetime.weekday() (0=segunda ... 6=domingo).
+# Cuidado: usar 1-7 aqui já causou o bug de "profissional nunca trabalha".
 DIAS_SEMANA = (
     (0, 'Segunda-feira'),
     (1, 'Terça-feira'),
@@ -29,3 +29,7 @@ DIAS_SEMANA = (
     (5, 'Sábado'),
     (6, 'Domingo'),
 )
+
+# Meta de receita mensal do salão (documento de requisitos: R$ 4.000-5.000).
+# O painel admin mostra uma barra de progresso da receita do mês vs. esta meta.
+META_RECEITA_MENSAL = Decimal('5000.00')

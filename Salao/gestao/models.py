@@ -49,6 +49,15 @@ class Usuario(AbstractUser):
     def __str__(self):
         return self.get_full_name()
 
+    @property
+    def celular_digitos(self) -> str:
+        """Celular só com números — pronto para montar link de WhatsApp.
+
+        Cadastros novos já gravam só dígitos, mas contas antigas podem ter
+        '(11) 99999-0000'; esta property normaliza na leitura.
+        """
+        return ''.join(filter(str.isdigit, self.celular or ''))
+
 
 class ClienteProfile(models.Model):
     """

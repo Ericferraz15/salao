@@ -9,8 +9,9 @@ aqui ficam o login e os formulários usados pelo painel da dona.
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
+from django.core.exceptions import NON_FIELD_ERRORS
 # pyrefly: ignore [missing-import]
-from .models import Servico, Funcionario
+from .models import JornadaTrabalho, Produto, Servico, Funcionario, TransacaoFinanceira
 
 Usuario = get_user_model()
 
@@ -109,3 +110,99 @@ class FuncionarioForm(forms.ModelForm):
         # para a checagem de e-mail duplicado no controller ser consistente
         # (evita "Joao@X.com" e "joao@x.com" como contas distintas).
         return self.cleaned_data['email'].lower().strip()
+
+
+class TransacaoForm(forms.Form):
+    """Lançamento manual no caixa (despesa ou entrada avulsa).
+
+    É um Form "puro" (não ModelForm) de propósito: quem grava é o
+    financeiroService.lancar_transacao — o form só desenha os campos e
+    faz a primeira validação.
+    """
+
+    tipo = forms.ChoiceField(
+        choices=TransacaoFinanceira.TIPO_CHOICES,
+        initial='SAIDA',
+        label='Tipo',
+        widget=forms.Select(attrs={'class': 'form-control'}),
+    )
+    valor = forms.DecimalField(
+        min_value=0.01,
+        decimal_places=2,
+        max_digits=10,
+        label='Valor (R$)',
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control', 'step': '0.01', 'min': '0.01',
+            'placeholder': '0,00',
+        }),
+    )
+    descricao = forms.CharField(
+        label='Descrição',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ex.: Aluguel de julho, venda de óleo de cutícula...',
+        }),
+    )
+
+
+class ProdutoForm(forms.ModelForm):
+    """Cadastro de produto do estoque (venda ou uso interno)."""
+
+    class Meta:
+        model = Produto
+        fields = ['nome', 'descricao', 'preco', 'quantidade_estoque', 'estoque_minimo']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do produto'}),
+            'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Para que serve / observações'}),
+            'preco': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': '0.01', 'placeholder': '0.00'}),
+            'quantidade_estoque': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Qtd. atual'}),
+            'estoque_minimo': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Alerta quando abaixo de...'}),
+        }
+
+    def clean_preco(self):
+        # DecimalField do model aceita negativo; barramos aqui no form.
+        preco = self.cleaned_data['preco']
+        if preco < 0:
+            raise forms.ValidationError('O preço não pode ser negativo.')
+        return preco
+
+
+class JornadaForm(forms.ModelForm):
+    """Expediente semanal de uma profissional (necessário para agendar!).
+
+    Sem jornada cadastrada, a profissional nunca aparece com horários
+    disponíveis — por isso o painel dá destaque a este formulário.
+    """
+
+    class Meta:
+        model = JornadaTrabalho
+        fields = ['funcionario', 'dia_da_semana', 'hora_inicio', 'hora_fim']
+        widgets = {
+            'funcionario': forms.Select(attrs={'class': 'form-control'}),
+            'dia_da_semana': forms.Select(attrs={'class': 'form-control'}),
+            # type=time abre o seletor de hora nativo do navegador/celular
+            'hora_inicio': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'hora_fim': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+        }
+        error_messages = {
+            NON_FIELD_ERRORS: {
+                'unique_together': 'Essa profissional já tem jornada nesse dia. '
+                                   'Remova a existente para cadastrar outra.',
+            },
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Só profissionais ativas aparecem no select
+        self.fields['funcionario'].queryset = (
+            Funcionario.objects.filter(esta_ativo=True).select_related('usuario')
+        )
+
+    def clean(self):
+        dados = super().clean()
+        inicio, fim = dados.get('hora_inicio'), dados.get('hora_fim')
+        if inicio and fim and fim <= inicio:
+            raise forms.ValidationError(
+                'O fim do expediente precisa ser depois do início.'
+            )
+        return dados

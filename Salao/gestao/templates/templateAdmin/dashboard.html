@@ -5,6 +5,7 @@
 
 {% block extra_head %}
 <style>
+    /* ─── Estrutura geral do painel ─────────────────────────────── */
     .admin-dashboard {
         padding: 120px 0 60px;
         background: var(--background-alt);
@@ -13,7 +14,7 @@
 
     .admin-dashboard .dashboard-header {
         text-align: center;
-        margin-bottom: 40px;
+        margin-bottom: 36px;
     }
 
     .admin-dashboard .dashboard-header h1 {
@@ -27,17 +28,60 @@
         font-size: 1.05rem;
     }
 
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+        align-items: start;
+    }
+
+    @media (max-width: 992px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+    }
+
+    .admin-section {
+        background: white;
+        border-radius: var(--radius-md);
+        padding: 30px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 30px;
+    }
+
+    .dashboard-grid .admin-section { margin-bottom: 0; }
+
+    .admin-section h2 {
+        font-family: 'Playfair Display', serif;
+        color: var(--text-heading);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--accent-rosegold-light);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.35rem;
+    }
+
+    .admin-section h2 i { color: var(--primary-mauve); }
+
+    .admin-section h3 {
+        margin-top: 30px;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.1rem;
+    }
+
+    /* ─── Cards de métricas ─────────────────────────────────────── */
     .metrics-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-bottom: 40px;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
     }
 
     .metric-card {
         background: white;
         border-radius: var(--radius-md);
-        padding: 24px;
+        padding: 20px 16px;
         text-align: center;
         box-shadow: var(--shadow-sm);
         border: 1px solid rgba(220, 129, 185, 0.15);
@@ -51,58 +95,104 @@
     }
 
     .metric-icon {
-        font-size: 2rem;
+        font-size: 1.6rem;
         color: var(--primary-mauve);
-        margin-bottom: 15px;
+        margin-bottom: 12px;
     }
 
     .metric-value {
-        font-size: 2rem;
+        font-size: 1.5rem;
         font-weight: 600;
         color: var(--text-heading);
-        margin-bottom: 5px;
+        margin-bottom: 4px;
+        white-space: nowrap;
     }
 
     .metric-label {
         color: var(--text-muted);
-        font-size: 0.85rem;
+        font-size: 0.78rem;
         text-transform: uppercase;
         letter-spacing: 1px;
     }
 
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 30px;
+    .metric-positivo .metric-value, .metric-positivo .metric-icon { color: #166534; }
+    .metric-negativo .metric-value, .metric-negativo .metric-icon { color: #DC2626; }
+
+    /* ─── Meta financeira ───────────────────────────────────────── */
+    .meta-banner {
+        background: white;
+        border-radius: var(--radius-md);
+        padding: 22px 30px;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid rgba(220, 129, 185, 0.15);
         margin-bottom: 30px;
     }
 
-    @media (max-width: 992px) {
-        .dashboard-grid { grid-template-columns: 1fr; }
+    .meta-banner-topo {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
     }
 
-    .admin-section {
-        background: white;
-        border-radius: var(--radius-md);
-        padding: 30px;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .admin-section h2 {
+    .meta-banner-topo strong {
         font-family: 'Playfair Display', serif;
         color: var(--text-heading);
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid var(--accent-rosegold-light);
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        font-size: 1.1rem;
     }
 
-    .admin-section h2 i {
-        color: var(--primary-mauve);
+    .meta-banner-topo span { color: var(--text-muted); font-size: 0.9rem; }
+
+    .meta-barra {
+        height: 14px;
+        background: var(--background-alt);
+        border-radius: var(--radius-pill);
+        overflow: hidden;
     }
 
+    .meta-preenchido {
+        height: 100%;
+        background: var(--gradient-mauve);
+        border-radius: var(--radius-pill);
+        transition: width 0.8s ease;
+    }
+
+    .meta-batida .meta-preenchido { background: linear-gradient(135deg, #22C55E, #86EFAC); }
+
+    /* ─── Tabelas ───────────────────────────────────────────────── */
+    .recent-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+    }
+
+    .recent-table thead { background: var(--background-alt); }
+
+    .recent-table th {
+        padding: 12px 14px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-heading);
+        border-bottom: 2px solid rgba(0,0,0,0.06);
+        white-space: nowrap;
+    }
+
+    .recent-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(0,0,0,0.04);
+        color: var(--text-body);
+    }
+
+    .recent-table tbody tr:hover { background: rgba(220, 129, 185, 0.04); }
+
+    .linha-concluida td { opacity: 0.55; }
+
+    /* ─── Formulários ───────────────────────────────────────────── */
     .form-group { margin-bottom: 15px; }
 
     .form-group label {
@@ -120,6 +210,7 @@
         border-radius: var(--radius-sm);
         font-family: 'Outfit', sans-serif;
         transition: var(--transition-fast);
+        background: #fff;
     }
 
     .form-control:focus {
@@ -142,73 +233,136 @@
         transition: var(--transition-fast);
     }
 
-    .btn-submit:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-    }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
+    .erro-campo { color: #991B1B; font-size: 0.8rem; }
+
+    /* ─── Listas (serviços, equipe, estoque, jornadas) ──────────── */
     .item-list {
         list-style: none;
         padding: 0;
-        margin-top: 20px;
-        max-height: 300px;
+        margin-top: 16px;
+        max-height: 340px;
         overflow-y: auto;
     }
 
     .item-list li {
-        padding: 12px 0;
+        padding: 10px 0;
         border-bottom: 1px solid rgba(0,0,0,0.05);
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        gap: 12px;
     }
 
     .item-list li:last-child { border-bottom: none; }
+
+    .item-list .info { flex: 1; min-width: 0; }
+
+    .thumb-servico {
+        width: 52px;
+        height: 42px;
+        border-radius: 8px;
+        object-fit: cover;
+        flex-shrink: 0;
+        background: var(--background-alt);
+    }
+
+    .thumb-placeholder {
+        width: 52px;
+        height: 42px;
+        border-radius: 8px;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #FBEAF4, #F2D7D7);
+        color: var(--primary-mauve);
+    }
+
+    .avatar-equipe {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+        border: 2px solid rgba(220, 129, 185, 0.3);
+    }
+
+    .avatar-equipe-inicial {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gradient-mauve);
+        color: #fff;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
 
     .badge-status {
         padding: 4px 10px;
         border-radius: var(--radius-pill);
         font-size: 0.78rem;
         font-weight: 600;
+        white-space: nowrap;
     }
 
     .status-active { background: #DCFCE7; color: #166534; }
     .status-inactive { background: #FEE2E2; color: #991B1B; }
+    .badge-alerta { background: #FEF3C7; color: #92400E; }
+    .badge-ok { background: #DCFCE7; color: #166534; }
 
-    .recent-table {
+    /* ─── Gráfico de barras (CSS puro) ──────────────────────────── */
+    .grafico-barras {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        height: 170px;
+        padding-top: 24px;
+    }
+
+    .grafico-coluna {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        height: 100%;
+        gap: 6px;
+    }
+
+    .grafico-valor {
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    .grafico-barra {
         width: 100%;
-        border-collapse: collapse;
-        font-size: 0.88rem;
+        max-width: 46px;
+        background: var(--gradient-mauve);
+        border-radius: 8px 8px 4px 4px;
+        min-height: 3px;
+        transition: height 0.6s ease;
     }
 
-    .recent-table thead { background: var(--background-alt); }
-
-    .recent-table th {
-        padding: 12px 14px;
-        text-align: left;
-        font-weight: 600;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+    .grafico-rotulo {
+        font-size: 0.75rem;
         color: var(--text-heading);
-        border-bottom: 2px solid rgba(0,0,0,0.06);
+        font-weight: 500;
     }
 
-    .recent-table td {
-        padding: 12px 14px;
-        border-bottom: 1px solid rgba(0,0,0,0.04);
-        color: var(--text-body);
-    }
+    .grafico-hoje .grafico-barra { outline: 2px solid var(--primary-mauve); outline-offset: 2px; }
+    .grafico-hoje .grafico-rotulo { color: var(--primary-mauve); font-weight: 700; }
 
-    .recent-table tbody tr:hover {
-        background: rgba(220, 129, 185, 0.04);
-    }
-
-    .messages-container { margin-bottom: 20px; }
-    /* Ações de agendamento na tabela */
+    /* ─── Ações de agendamento / botões pequenos ────────────────── */
     .col-acoes { white-space: nowrap; }
     .acoes-agendamento { display: flex; gap: 6px; }
     .acoes-agendamento form { display: inline; margin: 0; }
+
     .btn-acao {
         border: none;
         cursor: pointer;
@@ -221,21 +375,62 @@
         justify-content: center;
         transition: all 0.2s ease;
     }
+
     .btn-acao:hover { transform: translateY(-1px); filter: brightness(0.96); }
     .acao-confirmar { background: #DCFCE7; color: #166534; }
     .acao-concluir  { background: #E0E7FF; color: #3730A3; }
     .acao-falta     { background: #F3F4F6; color: #6B7280; }
     .acao-cancelar  { background: #FEE2E2; color: #DC2626; }
+
+    .btn-whatsapp {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #DCFCE7;
+        color: #166534;
+        border-radius: var(--radius-pill);
+        padding: 5px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: var(--transition-fast);
+    }
+
+    .btn-whatsapp:hover { background: #BBF7D0; }
+
+    .btn-estoque {
+        border: 1px solid rgba(0,0,0,0.08);
+        background: #fff;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 700;
+        color: var(--text-heading);
+        transition: var(--transition-fast);
+    }
+
+    .btn-estoque:hover { border-color: var(--primary-mauve); color: var(--primary-mauve); }
+
+    .estoque-controles { display: flex; align-items: center; gap: 8px; }
+    .estoque-controles form { margin: 0; }
+    .estoque-qtd { min-width: 34px; text-align: center; font-weight: 600; color: var(--text-heading); }
+
+    .transacao-valor-entrada { color: #166534; font-weight: 600; white-space: nowrap; }
+    .transacao-valor-saida { color: #DC2626; font-weight: 600; white-space: nowrap; }
+
+    .vazio-msg { text-align: center; color: var(--text-muted); padding: 26px 10px; font-size: 0.92rem; }
+
+    .messages-container { margin-bottom: 20px; }
 </style>
 {% endblock %}
 
 {% block content %}
 <section class="admin-dashboard">
     <div class="container">
-        
+
         <div class="dashboard-header">
             <h1><i class="fas fa-gem" style="color: var(--primary-mauve);"></i> Painel da Administração</h1>
-            <p>Visão geral do seu salão</p>
+            <p>{{ hoje|date:"l, d \d\e F \d\e Y" }} — visão geral do seu salão</p>
         </div>
 
         {% if messages %}
@@ -248,7 +443,7 @@
         </div>
         {% endif %}
 
-        <!-- Metrics -->
+        <!-- ═══ MÉTRICAS ═══ -->
         <div class="metrics-grid">
             <div class="metric-card">
                 <i class="fas fa-calendar-check metric-icon"></i>
@@ -256,25 +451,148 @@
                 <div class="metric-label">Agendamentos Hoje</div>
             </div>
             <div class="metric-card">
+                <i class="fas fa-sun metric-icon"></i>
+                <div class="metric-value">R$ {{ receita_hoje|floatformat:2 }}</div>
+                <div class="metric-label">Receita Hoje</div>
+            </div>
+            <div class="metric-card">
                 <i class="fas fa-coins metric-icon"></i>
                 <div class="metric-value">R$ {{ receita_mes|floatformat:2 }}</div>
-                <div class="metric-label">Receita Mês</div>
+                <div class="metric-label">Receita do Mês</div>
+            </div>
+            <div class="metric-card">
+                <i class="fas fa-file-invoice-dollar metric-icon"></i>
+                <div class="metric-value">R$ {{ despesa_mes|floatformat:2 }}</div>
+                <div class="metric-label">Despesas do Mês</div>
+            </div>
+            <div class="metric-card {% if lucro_mes >= 0 %}metric-positivo{% else %}metric-negativo{% endif %}">
+                <i class="fas fa-sack-dollar metric-icon"></i>
+                <div class="metric-value">R$ {{ lucro_mes|floatformat:2 }}</div>
+                <div class="metric-label">Lucro do Mês</div>
             </div>
             <div class="metric-card">
                 <i class="fas fa-users metric-icon"></i>
-                <div class="metric-value">{{ total_funcionarios }}</div>
-                <div class="metric-label">Profissionais Ativos</div>
-            </div>
-            <div class="metric-card">
-                <i class="fas fa-spa metric-icon"></i>
-                <div class="metric-value">{{ total_servicos }}</div>
-                <div class="metric-label">Serviços Cadastrados</div>
+                <div class="metric-value">{{ total_funcionarios }} · {{ total_servicos }}</div>
+                <div class="metric-label">Equipe · Serviços</div>
             </div>
         </div>
 
+        <!-- ═══ META FINANCEIRA ═══ -->
+        <div class="meta-banner {% if meta_batida %}meta-batida{% endif %}">
+            <div class="meta-banner-topo">
+                <strong>
+                    <i class="fas fa-bullseye" style="color: var(--primary-mauve);"></i>
+                    Meta do mês
+                    {% if meta_batida %}— batida! 🎉{% endif %}
+                </strong>
+                <span>R$ {{ receita_mes|floatformat:2 }} de R$ {{ meta_mensal|floatformat:2 }} ({{ meta_progresso_pct }}%)</span>
+            </div>
+            <div class="meta-barra">
+                <div class="meta-preenchido" style="width: {{ meta_progresso_pct }}%;"></div>
+            </div>
+        </div>
+
+        <!-- ═══ AGENDA DO DIA ═══ -->
+        <div class="admin-section">
+            <h2><i class="fas fa-calendar-day"></i> Agenda do Dia</h2>
+            {% if agenda_do_dia %}
+            <div style="overflow-x: auto;">
+                <table class="recent-table">
+                    <thead>
+                        <tr>
+                            <th>Horário</th>
+                            <th>Cliente</th>
+                            <th>Contato</th>
+                            <th>Serviço</th>
+                            <th>Profissional</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ag in agenda_do_dia %}
+                        <tr {% if ag.status == 'CONCLUIDO' %}class="linha-concluida"{% endif %}>
+                            <td><strong>{{ ag.data_hora_inicio|date:"H:i" }}</strong> — {{ ag.data_hora_fim|date:"H:i" }}</td>
+                            <td>{{ ag.cliente.usuario.get_full_name }}</td>
+                            <td>
+                                {% if ag.cliente.usuario.celular_digitos %}
+                                <a class="btn-whatsapp" target="_blank" rel="noopener"
+                                   href="https://wa.me/55{{ ag.cliente.usuario.celular_digitos }}?text={% filter urlencode %}Olá, {{ ag.cliente.usuario.first_name }}! Confirmando seu horário de {{ ag.servico.nome }} hoje às {{ ag.data_hora_inicio|date:"H:i" }} no Studio Eduarda Ferraz 💖{% endfilter %}">
+                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                </a>
+                                {% else %}
+                                <span style="color: var(--text-muted);">—</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ ag.servico.nome }}</td>
+                            <td>{{ ag.profissional.usuario.first_name }}</td>
+                            <td><span class="status-badge status-{{ ag.status|lower }}">{{ ag.get_status_display }}</span></td>
+                            <td class="col-acoes">{% include 'templateAdmin/_acoes_agendamento.html' %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <p class="vazio-msg"><i class="far fa-calendar" style="margin-right:6px;"></i>Nenhum agendamento para hoje. Dia livre!</p>
+            {% endif %}
+        </div>
+
+        <!-- ═══ FINANCEIRO: GRÁFICO + CAIXA ═══ -->
         <div class="dashboard-grid">
-            
-            <!-- Adicionar Serviço -->
+
+            <div class="admin-section">
+                <h2><i class="fas fa-chart-column"></i> Receita — últimos 7 dias</h2>
+                <div class="grafico-barras">
+                    {% for item in grafico_receita %}
+                    <div class="grafico-coluna {% if item.data == hoje %}grafico-hoje{% endif %}"
+                         title="{{ item.data|date:'d/m' }}: R$ {{ item.total|floatformat:2 }}">
+                        <span class="grafico-valor">{% if item.total %}R$ {{ item.total|floatformat:0 }}{% endif %}</span>
+                        <div class="grafico-barra" style="height: {{ item.altura_pct }}%;"></div>
+                        <span class="grafico-rotulo">{{ item.rotulo }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="admin-section">
+                <h2><i class="fas fa-cash-register"></i> Caixa — lançar entrada/despesa</h2>
+                <form method="POST" action="{% url 'dashboard_admin' %}">
+                    {% csrf_token %}
+                    {% for field in transacao_form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<span class="erro-campo">{{ field.errors.0 }}</span>{% endif %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" name="add_transacao" class="btn-submit">Registrar no Caixa</button>
+                </form>
+
+                <h3>Últimos lançamentos</h3>
+                <ul class="item-list">
+                    {% for t in transacoes_recentes %}
+                    <li>
+                        <div class="info">
+                            <strong>{{ t.descricao|truncatechars:46 }}</strong><br>
+                            <small style="color: var(--text-muted);">{{ t.data_hora|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        {% if t.tipo == 'ENTRADA' %}
+                            <span class="transacao-valor-entrada">+ R$ {{ t.valor|floatformat:2 }}</span>
+                        {% else %}
+                            <span class="transacao-valor-saida">− R$ {{ t.valor|floatformat:2 }}</span>
+                        {% endif %}
+                    </li>
+                    {% empty %}
+                    <li><span class="vazio-msg" style="padding: 8px 0;">Nenhum lançamento ainda.</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- ═══ CADASTROS: SERVIÇO + PROFISSIONAL ═══ -->
+        <div class="dashboard-grid">
+
             <div class="admin-section">
                 <h2><i class="fas fa-cut"></i> Adicionar Novo Serviço</h2>
                 <form method="POST" action="{% url 'dashboard_admin' %}" enctype="multipart/form-data">
@@ -283,23 +601,25 @@
                     <div class="form-group">
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {{ field }}
-                        {% if field.errors %}
-                            <span style="color: #991B1B; font-size:0.8rem;">{{ field.errors.0 }}</span>
-                        {% endif %}
+                        {% if field.errors %}<span class="erro-campo">{{ field.errors.0 }}</span>{% endif %}
                     </div>
                     {% endfor %}
                     <button type="submit" name="add_servico" class="btn-submit">Salvar Serviço</button>
                 </form>
-                
-                <h3 style="margin-top: 30px; font-family: 'Playfair Display', serif;">Serviços Atuais</h3>
+
+                <h3>Serviços Atuais</h3>
                 <ul class="item-list">
                     {% for servico in servicos %}
                         <li>
-                            <div>
+                            {% if servico.foto %}
+                                <img src="{{ servico.foto.url }}" alt="{{ servico.nome }}" class="thumb-servico">
+                            {% else %}
+                                <span class="thumb-placeholder"><i class="fas fa-spa"></i></span>
+                            {% endif %}
+                            <div class="info">
                                 <strong>{{ servico.nome }}</strong><br>
-                                <small style="color: var(--text-muted);">{{ servico.duracao_minutos }} min | R$ {{ servico.preco }}</small>
+                                <small style="color: var(--text-muted);">{{ servico.duracao_minutos }} min | R$ {{ servico.preco|floatformat:2 }}</small>
                             </div>
-                            <i class="fas fa-chevron-right" style="color: var(--primary-mauve-light);"></i>
                         </li>
                     {% empty %}
                         <li>Nenhum serviço cadastrado.</li>
@@ -307,7 +627,6 @@
                 </ul>
             </div>
 
-            <!-- Adicionar Funcionário -->
             <div class="admin-section">
                 <h2><i class="fas fa-user-plus"></i> Adicionar Profissional</h2>
                 <form method="POST" action="{% url 'dashboard_admin' %}" enctype="multipart/form-data">
@@ -316,19 +635,22 @@
                     <div class="form-group">
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {{ field }}
-                        {% if field.errors %}
-                            <span style="color: #991B1B; font-size:0.8rem;">{{ field.errors.0 }}</span>
-                        {% endif %}
+                        {% if field.errors %}<span class="erro-campo">{{ field.errors.0 }}</span>{% endif %}
                     </div>
                     {% endfor %}
                     <button type="submit" name="add_funcionario" class="btn-submit">Salvar Profissional</button>
                 </form>
-                
-                <h3 style="margin-top: 30px; font-family: 'Playfair Display', serif;">Equipe</h3>
+
+                <h3>Equipe</h3>
                 <ul class="item-list">
                     {% for func in funcionarios %}
                         <li>
-                            <div>
+                            {% if func.foto %}
+                                <img src="{{ func.foto.url }}" alt="{{ func.usuario.get_full_name }}" class="avatar-equipe">
+                            {% else %}
+                                <span class="avatar-equipe-inicial">{{ func.usuario.first_name|slice:":1" }}{{ func.usuario.last_name|slice:":1" }}</span>
+                            {% endif %}
+                            <div class="info">
                                 <strong>{{ func.usuario.get_full_name }}</strong><br>
                                 <small style="color: var(--text-muted);">{{ func.especializacao }}</small>
                             </div>
@@ -343,10 +665,105 @@
                     {% endfor %}
                 </ul>
             </div>
-
         </div>
 
-        <!-- Últimos Agendamentos -->
+        <!-- ═══ JORNADAS + ESTOQUE ═══ -->
+        <div class="dashboard-grid">
+
+            <div class="admin-section">
+                <h2><i class="fas fa-business-time"></i> Jornadas de Trabalho</h2>
+                <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+                    Sem jornada cadastrada, a profissional não aparece com horários disponíveis para as clientes.
+                </p>
+                <form method="POST" action="{% url 'dashboard_admin' %}">
+                    {% csrf_token %}
+                    {% for field in jornada_form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<span class="erro-campo">{{ field.errors.0 }}</span>{% endif %}
+                    </div>
+                    {% endfor %}
+                    {% if jornada_form.non_field_errors %}
+                        <span class="erro-campo">{{ jornada_form.non_field_errors.0 }}</span>
+                    {% endif %}
+                    <button type="submit" name="add_jornada" class="btn-submit">Cadastrar Jornada</button>
+                </form>
+
+                <h3>Expediente da equipe</h3>
+                <ul class="item-list">
+                    {% for jornada in jornadas %}
+                    <li>
+                        <div class="info">
+                            <strong>{{ jornada.funcionario.usuario.first_name }}</strong> — {{ jornada.get_dia_da_semana_display }}<br>
+                            <small style="color: var(--text-muted);">{{ jornada.hora_inicio|time:"H:i" }} às {{ jornada.hora_fim|time:"H:i" }}</small>
+                        </div>
+                        <form method="post" action="{% url 'remover_jornada' jornada.id %}"
+                              onsubmit="return confirm('Remover esta jornada?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-acao acao-cancelar" title="Remover jornada"><i class="fas fa-trash-can"></i></button>
+                        </form>
+                    </li>
+                    {% empty %}
+                    <li>Nenhuma jornada cadastrada ainda.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="admin-section">
+                <h2><i class="fas fa-boxes-stacked"></i> Estoque de Produtos</h2>
+                {% if produtos_em_falta %}
+                <div class="alert alert-error" style="margin-bottom: 16px;">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    {{ produtos_em_falta|length }} produto(s) abaixo do estoque mínimo!
+                </div>
+                {% endif %}
+                <form method="POST" action="{% url 'dashboard_admin' %}">
+                    {% csrf_token %}
+                    {% for field in produto_form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<span class="erro-campo">{{ field.errors.0 }}</span>{% endif %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" name="add_produto" class="btn-submit">Adicionar Produto</button>
+                </form>
+
+                <h3>Produtos</h3>
+                <ul class="item-list">
+                    {% for produto in produtos %}
+                    <li>
+                        <div class="info">
+                            <strong>{{ produto.nome }}</strong>
+                            {% if produto.abaixo_estoque_minimo %}
+                                <span class="badge-status badge-alerta">repor!</span>
+                            {% endif %}
+                            <br>
+                            <small style="color: var(--text-muted);">R$ {{ produto.preco|floatformat:2 }} · mínimo: {{ produto.estoque_minimo }}</small>
+                        </div>
+                        <div class="estoque-controles">
+                            <form method="post" action="{% url 'ajustar_estoque' produto.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="delta" value="-1">
+                                <button type="submit" class="btn-estoque" title="Dar baixa de 1">−</button>
+                            </form>
+                            <span class="estoque-qtd">{{ produto.quantidade_estoque }}</span>
+                            <form method="post" action="{% url 'ajustar_estoque' produto.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="delta" value="1">
+                                <button type="submit" class="btn-estoque" title="Adicionar 1">+</button>
+                            </form>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li>Nenhum produto cadastrado ainda.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- ═══ ÚLTIMOS AGENDAMENTOS ═══ -->
         <div class="admin-section">
             <h2><i class="fas fa-history"></i> Últimos Agendamentos</h2>
             {% if ultimos_agendamentos %}
@@ -372,45 +789,16 @@
                             <td>{{ ag.cliente.usuario.get_full_name }}</td>
                             <td>{{ ag.profissional.usuario.get_full_name }}</td>
                             <td>{{ ag.servico.nome }}</td>
-                            <td>R$ {{ ag.valor_cobrado|default:"—" }}</td>
+                            <td>R$ {{ ag.valor_cobrado|floatformat:2|default:"—" }}</td>
                             <td><span class="status-badge status-{{ ag.status|lower }}">{{ ag.get_status_display }}</span></td>
-                            <td class="col-acoes">
-                                {% if ag.status == 'PENDENTE' or ag.status == 'CONFIRMADO' %}
-                                <div class="acoes-agendamento">
-                                    {% if ag.status == 'PENDENTE' %}
-                                    <form method="post" action="{% url 'gerenciar_agendamento' ag.id %}">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="acao" value="confirmar">
-                                        <button type="submit" class="btn-acao acao-confirmar" title="Confirmar"><i class="fas fa-check"></i></button>
-                                    </form>
-                                    {% endif %}
-                                    <form method="post" action="{% url 'gerenciar_agendamento' ag.id %}">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="acao" value="concluir">
-                                        <button type="submit" class="btn-acao acao-concluir" title="Concluir (lança receita)"><i class="fas fa-circle-check"></i></button>
-                                    </form>
-                                    <form method="post" action="{% url 'gerenciar_agendamento' ag.id %}">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="acao" value="no_show">
-                                        <button type="submit" class="btn-acao acao-falta" title="Não compareceu"><i class="fas fa-user-slash"></i></button>
-                                    </form>
-                                    <form method="post" action="{% url 'gerenciar_agendamento' ag.id %}" onsubmit="return confirm('Cancelar este agendamento?');">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="acao" value="cancelar">
-                                        <button type="submit" class="btn-acao acao-cancelar" title="Cancelar"><i class="fas fa-xmark"></i></button>
-                                    </form>
-                                </div>
-                                {% else %}
-                                <span style="color: var(--text-muted);">—</span>
-                                {% endif %}
-                            </td>
+                            <td class="col-acoes">{% include 'templateAdmin/_acoes_agendamento.html' %}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             {% else %}
-                <p style="text-align: center; color: var(--text-muted); padding: 30px;">Nenhum agendamento registrado ainda.</p>
+                <p class="vazio-msg">Nenhum agendamento registrado ainda.</p>
             {% endif %}
         </div>
 

@@ -12,6 +12,8 @@ from .Controller.dashboardController import (
     cancelar_agendamento_controller,
     dashboard_admin_controller,
     gerenciar_agendamento_controller,
+    ajustar_estoque_controller,
+    remover_jornada_controller,
 )
 # pyrefly: ignore [missing-import]
 from .forms import LoginForm
@@ -21,6 +23,8 @@ urlpatterns = [
     path('galeria/', galeria, name='galeria'),
     path('admin-dashboard/', dashboard_admin_controller, name='dashboard_admin'),
     path('admin-dashboard/agendamento/<int:agendamento_id>/', gerenciar_agendamento_controller, name='gerenciar_agendamento'),
+    path('admin-dashboard/produto/<int:produto_id>/estoque/', ajustar_estoque_controller, name='ajustar_estoque'),
+    path('admin-dashboard/jornada/<int:jornada_id>/remover/', remover_jornada_controller, name='remover_jornada'),
     path('agendar/', criar_agendamento_controller, name='criar_agendamento'),
     path('api/horarios-disponiveis/', api_horarios_disponiveis, name='api_horarios_disponiveis'),
     path('cadastro/', cliente_registro_controller, name='cadastro_cliente'),

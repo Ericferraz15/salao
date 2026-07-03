@@ -1,5 +1,6 @@
 import tempfile
 from datetime import datetime, timedelta, timezone as dt_timezone
+from decimal import Decimal
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -34,7 +35,17 @@ from .services.agendaServices import (
 # pyrefly: ignore [missing-import]
 from .services.cadastroService import ClienteRegistrationForm
 # pyrefly: ignore [missing-import]
-from .forms import FuncionarioForm, ServicoForm
+from .services.financeiroService import (
+    lancar_transacao,
+    receita_por_dia,
+    resumo_financeiro,
+)
+# pyrefly: ignore [missing-import]
+from .services.estoqueService import ajustar_estoque
+# pyrefly: ignore [missing-import]
+from .forms import FuncionarioForm, JornadaForm, ServicoForm
+# pyrefly: ignore [missing-import]
+from .models import Produto
 
 Usuario = get_user_model()
 
@@ -912,6 +923,212 @@ class DashboardClienteHistoricoTests(_BaseAgenda):
 
         historico = list(resp.context['historico'])
         self.assertEqual([a.pk for a in historico], [recente.pk, antigo.pk])
+
+
+class FinanceiroServiceTests(TestCase):
+    """Resumo financeiro, gráfico de receita e lançamentos manuais."""
+
+    def _agora(self):
+        return timezone.localtime(timezone.now())
+
+    def test_resumo_calcula_receita_despesa_e_lucro(self) -> None:
+        lancar_transacao('ENTRADA', '300.00', 'Serviço avulso')
+        lancar_transacao('ENTRADA', '200.00', 'Venda de produto')
+        lancar_transacao('SAIDA', '150.00', 'Reposição de esmaltes')
+
+        resumo = resumo_financeiro(self._agora())
+        self.assertEqual(resumo['receita_mes'], Decimal('500.00'))
+        self.assertEqual(resumo['despesa_mes'], Decimal('150.00'))
+        self.assertEqual(resumo['lucro_mes'], Decimal('350.00'))
+        self.assertEqual(resumo['receita_hoje'], Decimal('500.00'))
+
+    def test_progresso_da_meta_limitado_a_100(self) -> None:
+        lancar_transacao('ENTRADA', '999999.00', 'Mês espetacular')
+        resumo = resumo_financeiro(self._agora())
+        self.assertEqual(resumo['meta_progresso_pct'], 100)
+        self.assertTrue(resumo['meta_batida'])
+
+    def test_resumo_zerado_sem_transacoes(self) -> None:
+        resumo = resumo_financeiro(self._agora())
+        self.assertEqual(resumo['receita_mes'], Decimal('0'))
+        self.assertEqual(resumo['lucro_mes'], Decimal('0'))
+        self.assertEqual(resumo['meta_progresso_pct'], 0)
+
+    def test_receita_por_dia_tem_um_item_por_dia(self) -> None:
+        lancar_transacao('ENTRADA', '100.00', 'Hoje')
+        serie = receita_por_dia(self._agora(), dias=7)
+        self.assertEqual(len(serie), 7)
+        # O último item é hoje, com o valor lançado e barra no máximo
+        self.assertEqual(serie[-1]['data'], self._agora().date())
+        self.assertEqual(serie[-1]['total'], Decimal('100.00'))
+        self.assertEqual(serie[-1]['altura_pct'], 100)
+        # Dias sem receita aparecem zerados (sem "buracos" no gráfico)
+        self.assertEqual(serie[0]['total'], Decimal('0'))
+
+    def test_lancar_transacao_valida_entrada(self) -> None:
+        with self.assertRaises(ValidationError):
+            lancar_transacao('OUTRO', '10.00', 'tipo inválido')
+        with self.assertRaises(ValidationError):
+            lancar_transacao('SAIDA', '-5.00', 'valor negativo')
+        with self.assertRaises(ValidationError):
+            lancar_transacao('SAIDA', 'abc', 'valor não numérico')
+        with self.assertRaises(ValidationError):
+            lancar_transacao('SAIDA', '10.00', '   ')
+
+    def test_lancar_transacao_aceita_virgula(self) -> None:
+        t = lancar_transacao('SAIDA', '99,90', 'Compra com vírgula')
+        self.assertEqual(t.valor, Decimal('99.90'))
+
+
+class EstoqueServiceTests(TestCase):
+    """Ajuste de estoque com proteção contra quantidade negativa."""
+
+    def setUp(self) -> None:
+        self.produto = Produto.objects.create(
+            nome='Esmalte', descricao='x', preco=30,
+            quantidade_estoque=2, estoque_minimo=3,
+        )
+
+    def test_ajuste_positivo_e_negativo(self) -> None:
+        ajustar_estoque(self.produto.pk, +5)
+        self.produto.refresh_from_db()
+        self.assertEqual(self.produto.quantidade_estoque, 7)
+
+        ajustar_estoque(self.produto.pk, -3)
+        self.produto.refresh_from_db()
+        self.assertEqual(self.produto.quantidade_estoque, 4)
+
+    def test_nao_deixa_estoque_negativo(self) -> None:
+        with self.assertRaises(ValidationError):
+            ajustar_estoque(self.produto.pk, -10)
+        self.produto.refresh_from_db()
+        self.assertEqual(self.produto.quantidade_estoque, 2)  # intacto
+
+    def test_produto_inexistente(self) -> None:
+        with self.assertRaises(ValidationError):
+            ajustar_estoque(99999, 1)
+
+    def test_alerta_abaixo_do_minimo(self) -> None:
+        self.assertTrue(self.produto.abaixo_estoque_minimo)   # 2 < 3
+        ajustar_estoque(self.produto.pk, +5)
+        self.produto.refresh_from_db()
+        self.assertFalse(self.produto.abaixo_estoque_minimo)  # 7 >= 3
+
+
+class PainelAdminCompletoTests(_BaseAgenda):
+    """Fluxos HTTP do painel: caixa, produto, jornada e agenda do dia."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.admin = Usuario.objects.create_superuser(
+            username='dona', password='abc12345',
+            email='dona@t.com', celular='12000000066',
+        )
+        self.http = HttpClient()
+        self.http.login(username='dona', password='abc12345')
+
+    def test_contexto_tem_todas_as_secoes(self) -> None:
+        resp = self.http.get(reverse('dashboard_admin'))
+        self.assertEqual(resp.status_code, 200)
+        for chave in ('agenda_do_dia', 'grafico_receita', 'receita_hoje',
+                      'despesa_mes', 'lucro_mes', 'meta_mensal',
+                      'meta_progresso_pct', 'produtos', 'transacoes_recentes',
+                      'jornadas', 'transacao_form', 'produto_form', 'jornada_form'):
+            self.assertIn(chave, resp.context, chave)
+
+    def test_lancar_despesa_pelo_painel(self) -> None:
+        resp = self.http.post(reverse('dashboard_admin'), {
+            'add_transacao': '1', 'tipo': 'SAIDA',
+            'valor': '120.50', 'descricao': 'Aluguel',
+        })
+        self.assertEqual(resp.status_code, 302)
+        t = TransacaoFinanceira.objects.get(descricao='Aluguel')
+        self.assertEqual(t.tipo, 'SAIDA')
+        self.assertEqual(t.valor, Decimal('120.50'))
+
+    def test_transacao_invalida_reexibe_erros(self) -> None:
+        resp = self.http.post(reverse('dashboard_admin'), {
+            'add_transacao': '1', 'tipo': 'SAIDA',
+            'valor': '-1', 'descricao': 'inválida',
+        })
+        self.assertEqual(resp.status_code, 200)  # re-renderiza com erro
+        self.assertFalse(TransacaoFinanceira.objects.exists())
+
+    def test_add_produto_pelo_painel(self) -> None:
+        resp = self.http.post(reverse('dashboard_admin'), {
+            'add_produto': '1', 'nome': 'Acetona', 'descricao': 'uso interno',
+            'preco': '15.00', 'quantidade_estoque': 10, 'estoque_minimo': 2,
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(Produto.objects.filter(nome='Acetona').exists())
+
+    def test_add_jornada_pelo_painel(self) -> None:
+        n = JornadaTrabalho.objects.count()
+        resp = self.http.post(reverse('dashboard_admin'), {
+            'add_jornada': '1', 'funcionario': self.func.pk,
+            'dia_da_semana': 5, 'hora_inicio': '09:00', 'hora_fim': '13:00',
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(JornadaTrabalho.objects.count(), n + 1)
+
+    def test_jornada_duplicada_recusada(self) -> None:
+        n = JornadaTrabalho.objects.count()
+        resp = self.http.post(reverse('dashboard_admin'), {
+            'add_jornada': '1', 'funcionario': self.func.pk,
+            'dia_da_semana': 0,  # segunda já existe no _BaseAgenda
+            'hora_inicio': '09:00', 'hora_fim': '13:00',
+        })
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(JornadaTrabalho.objects.count(), n)
+
+    def test_jornada_fim_antes_do_inicio_recusada(self) -> None:
+        form = JornadaForm(data={
+            'funcionario': self.func.pk, 'dia_da_semana': 6,
+            'hora_inicio': '14:00', 'hora_fim': '09:00',
+        })
+        self.assertFalse(form.is_valid())
+
+    def test_remover_jornada(self) -> None:
+        jornada = JornadaTrabalho.objects.filter(funcionario=self.func).first()
+        resp = self.http.post(reverse('remover_jornada', args=[jornada.pk]))
+        self.assertEqual(resp.status_code, 302)
+        self.assertFalse(JornadaTrabalho.objects.filter(pk=jornada.pk).exists())
+
+    def test_ajustar_estoque_pelo_painel(self) -> None:
+        produto = Produto.objects.create(
+            nome='Algodão', descricao='x', preco=5,
+            quantidade_estoque=1, estoque_minimo=1,
+        )
+        self.http.post(reverse('ajustar_estoque', args=[produto.pk]), {'delta': '1'})
+        produto.refresh_from_db()
+        self.assertEqual(produto.quantidade_estoque, 2)
+
+    def test_agenda_do_dia_mostra_agendamento_de_hoje(self) -> None:
+        # Cria um agendamento HOJE direto no banco (pode ser de manhã cedo;
+        # o service recusaria horário passado, o que não importa aqui).
+        agora = timezone.localtime(timezone.now())
+        inicio = agora.replace(hour=9, minute=0, second=0, microsecond=0)
+        ag = Agendamento.objects.create(
+            cliente=self.cliente, profissional=self.func, servico=self.servico,
+            data_hora_inicio=inicio, data_hora_fim=inicio + timedelta(hours=1),
+            status='CONFIRMADO', valor_cobrado=self.servico.preco,
+        )
+        resp = self.http.get(reverse('dashboard_admin'))
+        self.assertIn(ag, list(resp.context['agenda_do_dia']))
+        # Link de WhatsApp com o celular do cliente aparece na página
+        self.assertContains(resp, 'wa.me/55' + self.cliente.usuario.celular_digitos)
+
+    def test_nao_admin_bloqueado_nas_novas_rotas(self) -> None:
+        produto = Produto.objects.create(
+            nome='Bloqueio', descricao='x', preco=5,
+            quantidade_estoque=1, estoque_minimo=1,
+        )
+        http = HttpClient()
+        http.login(username='cl', password='abc12345')  # cliente comum
+        resp = http.post(reverse('ajustar_estoque', args=[produto.pk]), {'delta': '1'})
+        self.assertEqual(resp.status_code, 302)
+        produto.refresh_from_db()
+        self.assertEqual(produto.quantidade_estoque, 1)  # nada mudou
 
 
 # Os testes de foto gravam em um diretório temporário para não sujar o
