@@ -111,6 +111,14 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# ─── ARQUIVOS DE MÍDIA (uploads) ──────────────────────────────────────────────
+# Estáticos = arquivos DO projeto (CSS, JS, imagens fixas).
+# Mídia = arquivos ENVIADOS pelo uso (fotos de serviços e profissionais).
+# O upload vai parar em MEDIA_ROOT e é servido na URL MEDIA_URL
+# (rota registrada em Salao/urls.py).
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 if not DEBUG:
     STORAGES = {
         'staticfiles': {

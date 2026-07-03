@@ -1,10 +1,12 @@
+import tempfile
 from datetime import datetime, timedelta, timezone as dt_timezone
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError, transaction
-from django.test import TestCase, Client as HttpClient
+from django.test import TestCase, Client as HttpClient, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -910,6 +912,85 @@ class DashboardClienteHistoricoTests(_BaseAgenda):
 
         historico = list(resp.context['historico'])
         self.assertEqual([a.pk for a in historico], [recente.pk, antigo.pk])
+
+
+# Os testes de foto gravam em um diretório temporário para não sujar o
+# media/ real do projeto.
+_MEDIA_TESTES = tempfile.mkdtemp(prefix='salao-test-media-')
+
+
+def _imagem_teste(nome='foto.gif'):
+    """Menor GIF válido possível (1x1) — suficiente para o Pillow aceitar."""
+    gif_1x1 = (
+        b'GIF87a\x01\x00\x01\x00\x80\x01\x00\x00\x00\x00ccc,\x00'
+        b'\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
+    )
+    return SimpleUploadedFile(nome, gif_1x1, content_type='image/gif')
+
+
+@override_settings(MEDIA_ROOT=_MEDIA_TESTES)
+class FotosTests(_BaseAgenda):
+    """Fotos de serviço/profissional: upload pelo painel e exibição ao agendar."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.admin = Usuario.objects.create_superuser(
+            username='admfoto', password='abc12345',
+            email='admfoto@t.com', celular='12000000077',
+        )
+        self.http_admin = HttpClient()
+        self.http_admin.login(username='admfoto', password='abc12345')
+
+    def test_add_servico_com_foto_pelo_painel(self) -> None:
+        resp = self.http_admin.post(reverse('dashboard_admin'), {
+            'add_servico': '1', 'nome': 'Spa com Foto', 'descricao': 'd',
+            'duracao_minutos': 30, 'preco': '45.00',
+            'foto': _imagem_teste('spa.gif'),
+        })
+        self.assertEqual(resp.status_code, 302)
+        servico = Servico.objects.get(nome='Spa com Foto')
+        self.assertTrue(servico.foto.name.startswith('servicos/'))
+
+    def test_add_funcionario_com_foto_pelo_painel(self) -> None:
+        resp = self.http_admin.post(reverse('dashboard_admin'), {
+            'add_funcionario': '1', 'first_name': 'Bia', 'last_name': 'Foto',
+            'email': 'bia.foto@t.com', 'celular': '12988880000',
+            'especializacao': 'Manicure', 'esta_ativo': 'on',
+            'foto': _imagem_teste('bia.gif'),
+        })
+        self.assertEqual(resp.status_code, 302)
+        func = Funcionario.objects.get(usuario__email='bia.foto@t.com')
+        self.assertTrue(func.foto.name.startswith('equipe/'))
+
+    def test_foto_e_opcional_nos_forms(self) -> None:
+        form = ServicoForm(data={
+            'nome': 'Sem Foto', 'descricao': 'd',
+            'duracao_minutos': 30, 'preco': '10.00',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_agendar_mostra_placeholder_sem_foto(self) -> None:
+        http = HttpClient()
+        http.login(username='cl', password='abc12345')
+        resp = http.get(reverse('criar_agendamento'))
+        self.assertContains(resp, 'foto-placeholder')   # serviço sem foto
+        self.assertContains(resp, 'avatar-inicial')      # profissional sem foto
+
+    def test_agendar_mostra_foto_quando_existe(self) -> None:
+        self.servico.foto.save('gel.gif', _imagem_teste('gel.gif'), save=True)
+        self.func.foto.save('pro.gif', _imagem_teste('pro.gif'), save=True)
+
+        http = HttpClient()
+        http.login(username='cl', password='abc12345')
+        resp = http.get(reverse('criar_agendamento'))
+        self.assertContains(resp, self.servico.foto.url)
+        self.assertContains(resp, self.func.foto.url)
+
+    def test_url_de_media_serve_o_arquivo(self) -> None:
+        """A rota /media/ devolve o upload (Django servindo os arquivos)."""
+        self.servico.foto.save('rota.gif', _imagem_teste('rota.gif'), save=True)
+        resp = HttpClient().get(self.servico.foto.url)
+        self.assertEqual(resp.status_code, 200)
 
 
 class ConstraintsBancoTests(_BaseAgenda):

@@ -94,7 +94,8 @@ def dashboard_admin_controller(request):
 
     if request.method == 'POST':
         if 'add_servico' in request.POST:
-            servico_form = ServicoForm(request.POST)
+            # request.FILES carrega a foto enviada (o form é multipart)
+            servico_form = ServicoForm(request.POST, request.FILES)
             if servico_form.is_valid():
                 servico_form.save()
                 messages.success(request, 'Serviço adicionado com sucesso!')
@@ -103,7 +104,7 @@ def dashboard_admin_controller(request):
                 messages.error(request, 'Erro ao adicionar serviço. Verifique os dados.')
 
         elif 'add_funcionario' in request.POST:
-            funcionario_form = FuncionarioForm(request.POST)
+            funcionario_form = FuncionarioForm(request.POST, request.FILES)
             if funcionario_form.is_valid():
                 email = funcionario_form.cleaned_data['email']
                 if Usuario.objects.filter(email=email).exists():

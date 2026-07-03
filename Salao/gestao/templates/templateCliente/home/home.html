@@ -57,7 +57,11 @@
                     {% cycle 'images/galeria/along-francesa-ouro.jpeg' 'images/galeria/gel-azul-strass.jpeg' 'images/galeria/art-stiletto-olho-grego.jpeg' 'images/galeria/along-francesinha.jpeg' 'images/galeria/gel-branco-glitter.jpeg' 'images/galeria/art-joaninha.jpeg' 'images/galeria/along-amendoa-preta.jpeg' 'images/galeria/gel-glitter-prata.jpeg' as svc_img silent %}
                     <div class="service-card">
                         <div class="service-image">
-                            <img src="{% static svc_img %}" alt="{{ servico.nome }}" loading="lazy">
+                            {% if servico.foto %}
+                                <img src="{{ servico.foto.url }}" alt="{{ servico.nome }}" loading="lazy">
+                            {% else %}
+                                <img src="{% static svc_img %}" alt="{{ servico.nome }}" loading="lazy">
+                            {% endif %}
                             <div class="service-duration"><i class="far fa-clock"></i> {{ servico.duracao_minutos }} min</div>
                         </div>
                         <div class="service-content">

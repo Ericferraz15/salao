@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Agendar Serviço - Salão Premium{% endblock %}
+{% block title %}Agendar Horário - Eduarda Ferraz{% endblock %}
 
 {% block content %}
 <div class="auth-body">
-    <div class="auth-page" style="max-width: 700px;">
+    <div class="auth-page agendar-page">
         <div class="auth-card">
             <div class="auth-header">
-                <h2>Agendar Novo Serviço</h2>
-                <p>Escolha o serviço, o especialista e o seu melhor momento.</p>
+                <h2>Agendar Novo Horário</h2>
+                <p>Escolha o serviço, a especialista e o seu melhor momento.</p>
             </div>
 
             {% if messages %}
@@ -24,46 +24,72 @@
 
             <form method="post" class="premium-form" id="agendamentoForm">
                 {% csrf_token %}
-                
+
+                <!-- Passo 1: serviço (cards com foto do trabalho) -->
                 <div class="form-group">
-                    <label for="id_servico">Serviço Desejado</label>
-                    <select name="servicoId" id="id_servico" required>
-                        <option value="">-- Escolha o Serviço --</option>
+                    <label class="passo-label"><span class="passo-numero">1</span> Escolha o Serviço</label>
+                    <div class="escolha-grid escolha-servicos" id="servicos-container">
                         {% for servico in servicos %}
-                            <option value="{{ servico.pk }}">{{ servico.nome }} ({{ servico.duracao_minutos }} min)</option>
+                        <label class="opcao-card">
+                            <input type="radio" name="servicoId" value="{{ servico.pk }}" class="opcao-radio" required>
+                            <span class="opcao-foto">
+                                {% if servico.foto %}
+                                    <img src="{{ servico.foto.url }}" alt="Foto do serviço {{ servico.nome }}" loading="lazy">
+                                {% else %}
+                                    <span class="foto-placeholder"><i class="fas fa-spa"></i></span>
+                                {% endif %}
+                            </span>
+                            <span class="opcao-info">
+                                <strong>{{ servico.nome }}</strong>
+                                <small><i class="far fa-clock"></i> {{ servico.duracao_minutos }} min &nbsp;·&nbsp; R$ {{ servico.preco|floatformat:2 }}</small>
+                            </span>
+                            <span class="opcao-check"><i class="fas fa-check"></i></span>
+                        </label>
+                        {% empty %}
+                        <p class="escolha-vazia">Nenhum serviço disponível no momento.</p>
                         {% endfor %}
-                    </select>
+                    </div>
                 </div>
 
+                <!-- Passo 2: profissional (cards com foto para reconhecer fácil) -->
                 <div class="form-group">
-                    <label for="id_profissional">Especialista</label>
-                    <select name="profissionalId" id="id_profissional" required>
-                        <option value="">-- Escolha o Profissional --</option>
+                    <label class="passo-label"><span class="passo-numero">2</span> Escolha a Especialista</label>
+                    <div class="escolha-grid escolha-profissionais" id="profissionais-container">
                         {% for funcionario in funcionarios %}
-                            <option value="{{ funcionario.pk }}">
-                                {{ funcionario.usuario.first_name }} {{ funcionario.usuario.last_name }}
-                            </option>
+                        <label class="opcao-card pro-card">
+                            <input type="radio" name="profissionalId" value="{{ funcionario.pk }}" class="opcao-radio" required>
+                            <span class="pro-avatar">
+                                {% if funcionario.foto %}
+                                    <img src="{{ funcionario.foto.url }}" alt="Foto de {{ funcionario.usuario.get_full_name }}" loading="lazy">
+                                {% else %}
+                                    <span class="avatar-inicial">{{ funcionario.usuario.first_name|slice:":1" }}{{ funcionario.usuario.last_name|slice:":1" }}</span>
+                                {% endif %}
+                            </span>
+                            <span class="opcao-info">
+                                <strong>{{ funcionario.usuario.get_full_name }}</strong>
+                                <small>{{ funcionario.especializacao }}</small>
+                            </span>
+                            <span class="opcao-check"><i class="fas fa-check"></i></span>
+                        </label>
+                        {% empty %}
+                        <p class="escolha-vazia">Nenhuma profissional disponível no momento.</p>
                         {% endfor %}
-                    </select>
+                    </div>
                 </div>
 
-                <!-- Input escondido que será preenchido pelo JS -->
+                <!-- Preenchido pelo JS quando a cliente escolhe o horário -->
                 <input type="hidden" name="hora_de_inicio" id="id_hora_de_inicio" required>
 
-                <!-- UI Dinâmica de Dias e Horários -->
-                <div id="dynamic-calendar" style="display: none; margin-top: 30px;">
+                <!-- Passo 3: dias e horários (carregados da API) -->
+                <div id="dynamic-calendar" style="display: none;">
                     <div class="form-group">
-                        <label>Escolha o Dia</label>
-                        <div class="chip-container" id="dias-container">
-                            <!-- Injetado via JS -->
-                        </div>
+                        <label class="passo-label"><span class="passo-numero">3</span> Escolha o Dia</label>
+                        <div class="chip-container" id="dias-container"></div>
                     </div>
 
                     <div class="form-group" id="horarios-group" style="display: none;">
-                        <label>Escolha o Horário</label>
-                        <div class="chip-container" id="horarios-container">
-                            <!-- Injetado via JS -->
-                        </div>
+                        <label class="passo-label"><span class="passo-numero">4</span> Escolha o Horário</label>
+                        <div class="chip-container" id="horarios-container"></div>
                     </div>
                 </div>
 
@@ -71,12 +97,14 @@
                     <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-mauve);"></i>
                     <p style="margin-top: 10px; color: var(--text-muted); font-size: 0.9rem;">Buscando horários disponíveis...</p>
                 </div>
-                
+
                 <div id="error-message" style="display: none;" class="alert alert-error"></div>
 
-                <button type="submit" class="btn-hero btn-primary w-100 mt-20" id="btn-submit" disabled>Confirmar Agendamento <i class="far fa-calendar-check" style="margin-left: 8px;"></i></button>
+                <button type="submit" class="btn-hero btn-primary w-100 mt-20" id="btn-submit" disabled>
+                    Confirmar Agendamento <i class="far fa-calendar-check" style="margin-left: 8px;"></i>
+                </button>
             </form>
-            
+
             <div class="auth-footer" style="margin-top: 30px;">
                 <a href="{% url 'home' %}" class="btn-nav btn-login"><i class="fas fa-arrow-left"></i> Voltar para Home</a>
             </div>
@@ -85,9 +113,10 @@
 </div>
 
 <script>
+    // Fluxo da tela: (1) serviço + (2) profissional escolhidos nos cards
+    // -> busca os horários na API -> (3) dia -> (4) horário -> habilita enviar.
     document.addEventListener("DOMContentLoaded", function() {
-        const servicoSelect = document.getElementById("id_servico");
-        const profissionalSelect = document.getElementById("id_profissional");
+        const form = document.getElementById("agendamentoForm");
         const dynamicCalendar = document.getElementById("dynamic-calendar");
         const diasContainer = document.getElementById("dias-container");
         const horariosGroup = document.getElementById("horarios-group");
@@ -99,64 +128,76 @@
 
         let diasDisponiveis = [];
 
-        function fetchHorarios() {
-            const servicoId = servicoSelect.value;
-            const profissionalId = profissionalSelect.value;
+        function valorSelecionado(nome) {
+            const marcado = form.querySelector(`input[name="${nome}"]:checked`);
+            return marcado ? marcado.value : "";
+        }
 
-            // Reset
+        // Marca visualmente o card cujo radio está selecionado
+        function atualizarCards() {
+            form.querySelectorAll(".opcao-card").forEach(card => {
+                const radio = card.querySelector(".opcao-radio");
+                card.classList.toggle("selected", radio && radio.checked);
+            });
+        }
+
+        function fetchHorarios() {
+            const servicoId = valorSelecionado("servicoId");
+            const profissionalId = valorSelecionado("profissionalId");
+
+            // Recomeça a parte de dia/horário sempre que muda serviço/profissional
             dynamicCalendar.style.display = "none";
             horariosGroup.style.display = "none";
             hiddenInput.value = "";
             btnSubmit.disabled = true;
             errorMessage.style.display = "none";
 
-            if (servicoId && profissionalId) {
-                loadingSpinner.style.display = "block";
+            if (!servicoId || !profissionalId) return;
 
-                fetch(`/api/horarios-disponiveis/?profissional_id=${profissionalId}&servico_id=${servicoId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        loadingSpinner.style.display = "none";
-                        
-                        if (data.error) {
-                            errorMessage.textContent = data.error;
-                            errorMessage.style.display = "block";
-                            return;
-                        }
+            loadingSpinner.style.display = "block";
 
-                        diasDisponiveis = data.dias;
-                        
-                        if (diasDisponiveis.length === 0) {
-                            errorMessage.textContent = "Não há horários disponíveis para este profissional nos próximos dias.";
-                            errorMessage.style.display = "block";
-                            return;
-                        }
+            fetch(`/api/horarios-disponiveis/?profissional_id=${profissionalId}&servico_id=${servicoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    loadingSpinner.style.display = "none";
 
-                        renderDias();
-                        dynamicCalendar.style.display = "block";
-                    })
-                    .catch(err => {
-                        loadingSpinner.style.display = "none";
-                        errorMessage.textContent = "Erro ao buscar horários. Tente novamente.";
+                    if (data.error) {
+                        errorMessage.textContent = data.error;
                         errorMessage.style.display = "block";
-                    });
-            }
+                        return;
+                    }
+
+                    diasDisponiveis = data.dias;
+
+                    if (diasDisponiveis.length === 0) {
+                        errorMessage.textContent = "Não há horários disponíveis para esta profissional nos próximos dias.";
+                        errorMessage.style.display = "block";
+                        return;
+                    }
+
+                    renderDias();
+                    dynamicCalendar.style.display = "block";
+                    dynamicCalendar.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                })
+                .catch(() => {
+                    loadingSpinner.style.display = "none";
+                    errorMessage.textContent = "Erro ao buscar horários. Tente novamente.";
+                    errorMessage.style.display = "block";
+                });
         }
 
         function renderDias() {
             diasContainer.innerHTML = "";
-            
+
             diasDisponiveis.forEach((diaObj, index) => {
                 const btn = document.createElement("button");
                 btn.type = "button";
                 btn.className = "date-chip";
                 btn.innerHTML = `<strong>${diaObj.dia_semana_nome}</strong><br><span>${diaObj.data_formatada}</span>`;
-                
+
                 btn.addEventListener("click", function() {
-                    // Remove selected do anterior
                     document.querySelectorAll(".date-chip").forEach(b => b.classList.remove("selected"));
                     this.classList.add("selected");
-                    
                     renderHorarios(index);
                 });
 
@@ -167,7 +208,7 @@
         function renderHorarios(diaIndex) {
             horariosContainer.innerHTML = "";
             const horarios = diasDisponiveis[diaIndex].horarios;
-            
+
             if (horarios.length === 0) {
                 horariosContainer.innerHTML = "<p style='color: var(--text-muted); font-size: 0.9rem;'>Nenhum horário livre neste dia.</p>";
             } else {
@@ -176,13 +217,12 @@
                     btn.type = "button";
                     btn.className = "time-chip";
                     btn.textContent = horarioObj.hora;
-                    
+
                     btn.addEventListener("click", function() {
-                        // Remove selected do anterior
                         document.querySelectorAll(".time-chip").forEach(b => b.classList.remove("selected"));
                         this.classList.add("selected");
-                        
-                        // Preenche o hidden input pro form ser enviado!
+
+                        // Guarda o horário escolhido para o envio do formulário
                         hiddenInput.value = horarioObj.datetime_completo;
                         btnSubmit.disabled = false;
                     });
@@ -190,15 +230,20 @@
                     horariosContainer.appendChild(btn);
                 });
             }
-            
-            // Reseta botão de submit
+
+            // Trocou de dia: precisa escolher o horário de novo
             hiddenInput.value = "";
             btnSubmit.disabled = true;
             horariosGroup.style.display = "block";
         }
 
-        servicoSelect.addEventListener("change", fetchHorarios);
-        profissionalSelect.addEventListener("change", fetchHorarios);
+        // Os radios ficam dentro dos cards; 'change' dispara ao clicar no card
+        form.addEventListener("change", function(e) {
+            if (e.target.name === "servicoId" || e.target.name === "profissionalId") {
+                atualizarCards();
+                fetchHorarios();
+            }
+        });
     });
 </script>
 {% endblock %}

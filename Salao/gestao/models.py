@@ -81,6 +81,16 @@ class Funcionario(models.Model):
     )
     especializacao = models.CharField(max_length=100, verbose_name='cargo')
 
+    # Foto do profissional, exibida na hora de agendar para a cliente
+    # reconhecer com quem vai marcar. ImageField exige a biblioteca Pillow;
+    # o arquivo vai para MEDIA_ROOT/equipe/ e o banco guarda só o caminho.
+    foto = models.ImageField(
+        upload_to='equipe/',
+        null=True,
+        blank=True,
+        verbose_name='foto do profissional',
+    )
+
     # CORRIGIDO: snake_case (era camelCase 'estaAtivo' — inconsistente com Django)
     esta_ativo = models.BooleanField(default=True, verbose_name='está ativo')
 
@@ -102,6 +112,16 @@ class Servico(models.Model):
     duracao_minutos = models.PositiveIntegerField(verbose_name='duração (minutos)')
     preco = models.DecimalField(
         max_digits=10, decimal_places=2, verbose_name='preço (R$)'
+    )
+
+    # Foto de um trabalho real deste serviço — aparece na vitrine da home e
+    # nos cards da tela de agendamento, para a cliente ver o que está
+    # escolhendo. Opcional: sem foto, o front mostra um placeholder elegante.
+    foto = models.ImageField(
+        upload_to='servicos/',
+        null=True,
+        blank=True,
+        verbose_name='foto do serviço',
     )
 
     class Meta:

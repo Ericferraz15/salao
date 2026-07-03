@@ -41,14 +41,21 @@ class LoginForm(AuthenticationForm):
 
 
 class ServicoForm(forms.ModelForm):
+    """Cadastro/edição de serviço pelo painel da dona.
+
+    A foto é opcional (o front tem placeholder), mas recomendada: é ela
+    que aparece na vitrine e nos cards da tela de agendamento.
+    """
+
     class Meta:
         model = Servico
-        fields = ['nome', 'descricao', 'duracao_minutos', 'preco']
+        fields = ['nome', 'descricao', 'duracao_minutos', 'preco', 'foto']
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome do Serviço'}),
             'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Descrição'}),
             'duracao_minutos': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'placeholder': 'Duração em min.'}),
             'preco': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': '0.01', 'placeholder': '0.00'}),
+            'foto': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
         }
 
     def clean_duracao_minutos(self):
@@ -90,9 +97,10 @@ class FuncionarioForm(forms.ModelForm):
     
     class Meta:
         model = Funcionario
-        fields = ['especializacao', 'esta_ativo']
+        fields = ['especializacao', 'foto', 'esta_ativo']
         widgets = {
             'especializacao': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Cargo / Especialização'}),
+            'foto': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
             'esta_ativo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 

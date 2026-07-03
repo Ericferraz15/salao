@@ -277,7 +277,7 @@
             <!-- Adicionar Serviço -->
             <div class="admin-section">
                 <h2><i class="fas fa-cut"></i> Adicionar Novo Serviço</h2>
-                <form method="POST" action="{% url 'dashboard_admin' %}">
+                <form method="POST" action="{% url 'dashboard_admin' %}" enctype="multipart/form-data">
                     {% csrf_token %}
                     {% for field in servico_form %}
                     <div class="form-group">
@@ -310,7 +310,7 @@
             <!-- Adicionar Funcionário -->
             <div class="admin-section">
                 <h2><i class="fas fa-user-plus"></i> Adicionar Profissional</h2>
-                <form method="POST" action="{% url 'dashboard_admin' %}">
+                <form method="POST" action="{% url 'dashboard_admin' %}" enctype="multipart/form-data">
                     {% csrf_token %}
                     {% for field in funcionario_form %}
                     <div class="form-group">
