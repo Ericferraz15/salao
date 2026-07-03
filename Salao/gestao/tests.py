@@ -811,6 +811,85 @@ class CadastroSucessoControllerTests(TestCase):
         self.assertFalse(Usuario.objects.filter(email='rollback@teste.com').exists())
 
 
+class CadastroSimplificadoTests(TestCase):
+    """Cadastro sem campo de username, senha simples (6+) e login por e-mail."""
+
+    DADOS = {
+        'first_name': 'Julia', 'last_name': 'Ramos',
+        'email': 'julia@teste.com', 'celular': '(11) 98888-7777',
+        'password1': '123456', 'password2': '123456',
+    }
+
+    def _form(self, **override):
+        dados = {**self.DADOS, **override}
+        return ClienteRegistrationForm(data=dados)
+
+    def test_formulario_nao_tem_campo_username(self) -> None:
+        self.assertNotIn('username', ClienteRegistrationForm().fields)
+
+    def test_senha_simples_de_6_caracteres_aceita(self) -> None:
+        form = self._form()
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_senha_com_5_caracteres_recusada(self) -> None:
+        form = self._form(password1='12345', password2='12345')
+        self.assertFalse(form.is_valid())
+        self.assertIn('password2', form.errors)
+
+    def test_username_vira_o_email(self) -> None:
+        form = self._form()
+        self.assertTrue(form.is_valid(), form.errors)
+        user = form.save()
+        self.assertEqual(user.username, 'julia@teste.com')
+
+    def test_celular_gravado_so_com_digitos(self) -> None:
+        form = self._form()
+        self.assertTrue(form.is_valid(), form.errors)
+        user = form.save()
+        self.assertEqual(user.celular, '11988887777')
+
+    def test_celular_duplicado_com_formatacao_diferente_recusado(self) -> None:
+        """'(11) 98888-7777' e '11 98888 7777' são o MESMO número."""
+        primeira = self._form()
+        self.assertTrue(primeira.is_valid(), primeira.errors)
+        primeira.save()
+
+        form = self._form(email='outra@teste.com', celular='11 98888 7777')
+        self.assertFalse(form.is_valid())
+        self.assertIn('celular', form.errors)
+
+    def test_cadastro_http_sem_username_funciona(self) -> None:
+        http = HttpClient()
+        resp = http.post(reverse('cadastro_cliente'), self.DADOS, follow=True)
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(Usuario.objects.filter(email='julia@teste.com').exists())
+
+    def test_login_por_email_para_conta_antiga(self) -> None:
+        """Conta com username != e-mail (ex.: 'cliente' do seed) entra pelo e-mail."""
+        Usuario.objects.create_user(
+            username='antiga', password='abc12345',
+            email='antiga@t.com', celular='11977776666',
+        )
+        http = HttpClient()
+        self.assertTrue(http.login(username='antiga@t.com', password='abc12345'))
+
+    def test_login_por_username_continua_funcionando(self) -> None:
+        Usuario.objects.create_user(
+            username='apelido', password='abc12345',
+            email='apelido@t.com', celular='11977776665',
+        )
+        http = HttpClient()
+        self.assertTrue(http.login(username='apelido', password='abc12345'))
+
+    def test_login_email_com_senha_errada_falha(self) -> None:
+        Usuario.objects.create_user(
+            username='segura', password='abc12345',
+            email='segura@t.com', celular='11977776664',
+        )
+        http = HttpClient()
+        self.assertFalse(http.login(username='segura@t.com', password='errada'))
+
+
 class DashboardClienteHistoricoTests(_BaseAgenda):
     """O histórico deve listar o agendamento mais recente primeiro."""
 

@@ -13,6 +13,8 @@ from .Controller.dashboardController import (
     dashboard_admin_controller,
     gerenciar_agendamento_controller,
 )
+# pyrefly: ignore [missing-import]
+from .forms import LoginForm
 
 urlpatterns = [
     path('', home, name='home'),
@@ -24,6 +26,9 @@ urlpatterns = [
     path('cadastro/', cliente_registro_controller, name='cadastro_cliente'),
     path('meus-agendamentos/', dashboard_cliente_controller, name='dashboard_cliente'),
     path('cancelar-agendamento/<int:agendamento_id>/', cancelar_agendamento_controller, name='cancelar_agendamento'),
-    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login_cliente'),
+    path('login/', auth_views.LoginView.as_view(
+        template_name='registration/login.html',
+        authentication_form=LoginForm,
+    ), name='login_cliente'),
     path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
 ]

@@ -1,19 +1,18 @@
 """
-cadastroService.py
+cadastroService.py — regras de negócio do CADASTRO de clientes.
 
-CORREÇÕES APLICADAS:
-1. [BUG] Meta.model não estava definido — UserCreationForm.Meta.fields herdava
-   do User padrão, não do Usuario customizado. Adicionado model = Usuario.
+Papel na arquitetura
+--------------------
+O controller (cadastroController) só recebe a requisição e devolve a
+resposta; quem sabe COMO validar e criar um cliente é este módulo.
 
-2. [SEGURANÇA] Adicionado clean_email para verificar unicidade antes de salvar
-   (o banco já tem unique=True, mas o erro de banco gera uma exceção genérica
-   não amigável — melhor validar no form e retornar mensagem clara).
+O formulário abaixo herda de UserCreationForm, que já resolve o mais
+delicado (senha digitada 2x, hash seguro via set_password). Nós apenas:
 
-3. [UX] Campo 'telefone' renomeado para 'celular' para bater com o model.
-   No controller original estava sendo passado 'telefone' para ClienteProfile
-   que não tem esse campo — isso causava TypeError silencioso.
-
-4. Removido o type: ignore desnecessário no topo do arquivo.
+1. Escondemos o campo "username": a cliente não precisa inventar um
+   apelido — o e-mail vira o login automaticamente (menos atrito).
+2. Adicionamos os campos que o salão precisa (nome, sobrenome, celular).
+3. Validamos com mensagens amigáveis em português.
 """
 
 from django import forms
@@ -23,67 +22,107 @@ from ..models import Usuario
 
 
 class ClienteRegistrationForm(UserCreationForm):
-    # max_length espelha as colunas do model Usuario. Se o form permitir mais
-    # que o banco, a validação passa mas o INSERT falha no PostgreSQL
-    # ("value too long for type character varying"). O SQLite não reclama,
-    # então o erro só apareceria em produção.
+    """Formulário de criação de conta do cliente (usado em /cadastro/).
+
+    Detalhe importante: os max_length espelham as colunas do model Usuario.
+    Se o form aceitar mais que o banco, a validação passa mas o INSERT
+    quebra no PostgreSQL ("value too long"). O SQLite não reclama, então
+    o erro só apareceria em produção.
+    """
+
+    first_name = forms.CharField(
+        max_length=30,
+        required=True,
+        label='Nome',
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Maria', 'autocomplete': 'given-name',
+        }),
+    )
+    last_name = forms.CharField(
+        max_length=150,
+        required=True,
+        label='Sobrenome',
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Silva', 'autocomplete': 'family-name',
+        }),
+    )
     email = forms.EmailField(
         max_length=100,
         required=True,
         label='E-mail',
-        help_text='Usado para comunicação e recuperação de conta.',
+        help_text='Será o seu login para entrar no site.',
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'voce@exemplo.com', 'autocomplete': 'email',
+        }),
     )
-    # CORRIGIDO: era 'telefone' mas o model Usuario tem 'celular'
     celular = forms.CharField(
         max_length=15,
         required=True,
-        label='Celular',
-        help_text='Formato: (99) 99999-9999',
+        label='Celular (WhatsApp)',
+        widget=forms.TextInput(attrs={
+            'placeholder': '(11) 99999-9999', 'autocomplete': 'tel',
+            'inputmode': 'tel',
+        }),
     )
-    first_name = forms.CharField(max_length=30, required=True, label='Nome')
-    last_name = forms.CharField(max_length=150, required=True, label='Sobrenome')
-
     password1 = forms.CharField(
         label='Senha',
-        widget=forms.PasswordInput,
-        help_text='Mínimo de 8 caracteres. Não use senha óbvia.',
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'Crie uma senha', 'autocomplete': 'new-password',
+        }),
+        help_text='Só precisa ter 6 caracteres ou mais. Pode ser simples!',
     )
     password2 = forms.CharField(
         label='Confirme a senha',
-        widget=forms.PasswordInput,
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'Repita a senha', 'autocomplete': 'new-password',
+        }),
     )
 
     class Meta(UserCreationForm.Meta):
-        # CORRIGIDO: model explicitado — sem isso o form usa User padrão
         model = Usuario
-        fields = ('username', 'first_name', 'last_name', 'email', 'celular')
+        # Sem 'username' aqui: o campo some do formulário e é preenchido
+        # automaticamente com o e-mail no save() abaixo.
+        fields = ('first_name', 'last_name', 'email', 'celular')
 
     def clean_email(self):
-        """
-        NOVO: valida unicidade do e-mail com mensagem amigável.
-        Sem isso, o erro vinha do banco de dados como IntegrityError.
+        """Normaliza (minúsculas, sem espaços) e garante que é único.
+
+        O banco já tem unique=True, mas sem esta checagem o erro chegaria
+        como IntegrityError genérico — aqui viramos uma mensagem amigável.
+        Também checamos username porque o e-mail vira o login.
         """
         email = self.cleaned_data.get('email', '').lower().strip()
-        if Usuario.objects.filter(email=email).exists():
-            raise forms.ValidationError('Este e-mail já está cadastrado.')
+        if Usuario.objects.filter(email=email).exists() \
+                or Usuario.objects.filter(username=email).exists():
+            raise forms.ValidationError('Este e-mail já está cadastrado. Tente fazer login.')
         return email
 
     def clean_celular(self):
-        """Remove caracteres não numéricos para padronização."""
+        """Aceita qualquer formatação, mas exige 10 ou 11 dígitos (DDD + número).
+
+        Guardamos SÓ os dígitos: assim "(11) 99999-0000" e "11999990000"
+        são o mesmo celular para a constraint unique do banco.
+        """
         celular = self.cleaned_data.get('celular', '')
-        digits = ''.join(filter(str.isdigit, celular))
-        if len(digits) not in (10, 11):
+        digitos = ''.join(filter(str.isdigit, celular))
+        if len(digitos) not in (10, 11):
             raise forms.ValidationError(
-                'Celular inválido. Use o formato (99) 99999-9999.'
+                'Celular inválido. Use DDD + número, ex.: (11) 99999-9999.'
             )
-        return celular
+        if Usuario.objects.filter(celular=digitos).exists():
+            raise forms.ValidationError('Este celular já está cadastrado. Tente fazer login.')
+        return digitos
 
     def save(self, commit=True):
-        """
-        Garante que celular seja salvo no objeto Usuario antes do commit.
+        """Preenche o que não veio do formulário antes de gravar.
+
+        super().save(commit=False) monta o objeto Usuario com a senha já
+        criptografada, mas ainda sem tocar no banco — aí definimos
+        username = e-mail e só então gravamos.
         """
         user = super().save(commit=False)
-        user.email = self.cleaned_data['email'].lower().strip()
+        user.email = self.cleaned_data['email']
+        user.username = self.cleaned_data['email']
         user.celular = self.cleaned_data['celular']
         if commit:
             user.save()

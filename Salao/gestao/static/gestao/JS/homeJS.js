@@ -99,7 +99,32 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /* ============================================================
-     * 5. GALERIA — filtro por categoria
+     * 5. MOSTRAR/OCULTAR SENHA (olhinho nos campos de senha)
+     * ============================================================ */
+    document.querySelectorAll('.premium-form input[type="password"]').forEach(function (input) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'campo-senha';
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        var botao = document.createElement('button');
+        botao.type = 'button';
+        botao.className = 'btn-ver-senha';
+        botao.setAttribute('aria-label', 'Mostrar senha');
+        botao.innerHTML = '<i class="far fa-eye"></i>';
+        wrapper.appendChild(botao);
+
+        botao.addEventListener('click', function () {
+            var visivel = input.type === 'text';
+            input.type = visivel ? 'password' : 'text';
+            botao.setAttribute('aria-label', visivel ? 'Mostrar senha' : 'Ocultar senha');
+            botao.innerHTML = visivel ? '<i class="far fa-eye"></i>' : '<i class="far fa-eye-slash"></i>';
+            input.focus();
+        });
+    });
+
+    /* ============================================================
+     * 6. GALERIA — filtro por categoria
      * ============================================================ */
     var filtros = document.getElementById('galeriaFiltros');
     var grid = document.getElementById('galeriaGrid');
@@ -131,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /* ============================================================
-     * 6. LIGHTBOX
+     * 7. LIGHTBOX
      * ============================================================ */
     var lightbox = document.getElementById('lightbox');
     if (lightbox && grid) {

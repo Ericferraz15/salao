@@ -1070,6 +1070,36 @@ footer {
     margin-top: 6px;
 }
 
+/* Campo de senha com botão de mostrar/ocultar (o JS cria a estrutura) */
+.campo-senha {
+    position: relative;
+}
+
+.campo-senha input {
+    padding-right: 52px !important;
+}
+
+.btn-ver-senha {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-fast);
+}
+
+.btn-ver-senha:hover {
+    color: var(--primary-mauve);
+    background: rgba(220, 129, 185, 0.08);
+}
+
 .mt-20 {
     margin-top: 20px;
 }

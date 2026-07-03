@@ -88,11 +88,17 @@ else:
     }
 
 # ─── VALIDAÇÃO DE SENHAS ──────────────────────────────────────────────────────
+# Regra única e amigável: pelo menos 6 caracteres.
+#
+# Os validadores extras do Django (senha parecida com o nome, senha comum,
+# senha só de números) barravam senhas que o público do salão realmente usa
+# e tornavam o cadastro frustrante. Para contas de agendamento o risco é
+# baixo; se um dia o sistema guardar dados sensíveis, basta reativá-los aqui.
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 6},
+    },
 ]
 
 # ─── INTERNACIONALIZAÇÃO ──────────────────────────────────────────────────────
@@ -115,6 +121,10 @@ if not DEBUG:
 # ─── AUTENTICAÇÃO ─────────────────────────────────────────────────────────────
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'gestao.Usuario'
+
+# Login aceita e-mail OU username (ver gestao/backends.py). Contas novas
+# usam o e-mail como login; as antigas ('admin' do seed) seguem funcionando.
+AUTHENTICATION_BACKENDS = ['gestao.backends.EmailOuUsernameBackend']
 
 LOGIN_URL = 'login_cliente'
 LOGIN_REDIRECT_URL = 'home'

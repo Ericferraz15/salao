@@ -1,9 +1,44 @@
+"""
+forms.py — formulários da aplicação (login e painel admin).
+
+Formulário em Django = validação + widgets (o HTML dos campos).
+Os de cadastro de cliente moram em services/cadastroService.py;
+aqui ficam o login e os formulários usados pelo painel da dona.
+"""
+
 from django import forms
 from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import AuthenticationForm
 # pyrefly: ignore [missing-import]
 from .models import Servico, Funcionario
 
 Usuario = get_user_model()
+
+
+class LoginForm(AuthenticationForm):
+    """Tela de login com cara de "e-mail e senha".
+
+    Por baixo continua sendo o AuthenticationForm do Django (o campo
+    interno chama-se 'username'), mas como o cadastro usa o e-mail como
+    login, ajustamos rótulos, placeholders e a mensagem de erro.
+    """
+
+    error_messages = {
+        **AuthenticationForm.error_messages,
+        'invalid_login': 'E-mail ou senha incorretos. Confira e tente novamente.',
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].label = 'E-mail'
+        self.fields['username'].widget.attrs.update({
+            'placeholder': 'voce@exemplo.com', 'autocomplete': 'username',
+        })
+        self.fields['password'].label = 'Senha'
+        self.fields['password'].widget.attrs.update({
+            'placeholder': 'Sua senha', 'autocomplete': 'current-password',
+        })
+
 
 class ServicoForm(forms.ModelForm):
     class Meta:

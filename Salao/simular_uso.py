@@ -171,14 +171,15 @@ def montar_salao():
 def cadastrar_cliente_via_http():
     secao('2. CADASTRO DE CLIENTE (via formulário HTTP /cadastro/)')
     c = Client()
+    # Sem 'username': o formulário não tem mais esse campo (e-mail é o login).
+    # Senha simples de 6+ caracteres, como uma cliente real usaria.
     resp = c.post(reverse('cadastro_cliente'), {
-        'username': 'mariana@sim.salao',
         'first_name': 'Mariana',
         'last_name': 'Souza',
         'email': 'mariana@sim.salao',
         'celular': '(11) 90000-0004',
-        'password1': 'ClienteForte@123',
-        'password2': 'ClienteForte@123',
+        'password1': 'mari123',
+        'password2': 'mari123',
     })
     existe = Usuario.objects.filter(email='mariana@sim.salao').exists()
     checa('POST /cadastro/ retorna redirect (302)', resp.status_code == 302,
@@ -196,7 +197,7 @@ def cadastrar_cliente_via_http():
 def fluxo_cliente(cliente_user, profissionais, servicos):
     secao('3. FLUXO DO CLIENTE (login -> agendar -> dashboard -> cancelar)')
     c = Client()
-    logado = c.login(username='mariana@sim.salao', password='ClienteForte@123')
+    logado = c.login(username='mariana@sim.salao', password='mari123')
     checa('Login do cliente', logado)
 
     joana = profissionais[0]
