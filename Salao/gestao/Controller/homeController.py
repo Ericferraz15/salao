@@ -7,13 +7,21 @@ serviços, os trabalhos e o contato do salão.
 
 from django.shortcuts import render
 # pyrefly: ignore [missing-import]
-from ..models import Servico
+from ..models import Funcionario, Servico
 
 
 def home(request):
-    """Landing page: hero, sobre, vitrine de serviços (com foto) e contato."""
+    """Landing page: hero, sobre, vitrine, equipe, galeria e contato."""
     servicos = Servico.objects.all()
-    return render(request, 'templateCliente/home/home.html', {'servicos': servicos})
+    equipe = (
+        Funcionario.objects
+        .filter(esta_ativo=True)
+        .select_related('usuario')
+    )
+    return render(request, 'templateCliente/home/home.html', {
+        'servicos': servicos,
+        'equipe': equipe,
+    })
 
 
 # Categorias do catálogo (slug -> rótulo exibido nos filtros).

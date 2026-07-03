@@ -175,6 +175,22 @@ section {
     width: 100%;
 }
 
+/* Link "Agendar" da navbar com cara de botãozinho */
+.nav-links a.nav-agendar {
+    background: var(--gradient-mauve);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+}
+
+.nav-links a.nav-agendar::after { display: none; }
+
+.nav-links a.nav-agendar:hover {
+    box-shadow: 0 4px 14px rgba(220, 129, 185, 0.4);
+    transform: translateY(-1px);
+}
+
 .nav-collapse {
     display: flex;
     align-items: center;
@@ -601,6 +617,77 @@ section {
 
 .btn-service:hover i {
     transform: translateX(4px);
+}
+
+/* ==================================== */
+/* 4b. EQUIPE (home)                    */
+/* ==================================== */
+.equipe {
+    background-color: var(--background-alt);
+}
+
+.equipe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
+    justify-content: center;
+    gap: 28px;
+}
+
+.equipe-card {
+    background: var(--background-section);
+    border-radius: var(--radius-lg);
+    padding: 34px 24px 28px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(220, 129, 185, 0.12);
+    transition: var(--transition-smooth);
+}
+
+.equipe-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-mauve-light);
+}
+
+.equipe-foto {
+    width: 130px;
+    height: 130px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid var(--accent-rosegold-light);
+    box-shadow: var(--shadow-sm);
+}
+
+.equipe-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.equipe-inicial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: var(--gradient-mauve);
+    color: #fff;
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    text-transform: uppercase;
+}
+
+.equipe-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 4px;
+}
+
+.equipe-card p {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-bottom: 14px;
 }
 
 /* ==================================== */
@@ -1489,6 +1576,27 @@ footer {
     display: flex;
     align-items: center;
     gap: 6px;
+}
+
+/* Foto do serviço no topo do card (só quando o serviço tem foto) */
+.agendamento-card-foto {
+    height: 110px;
+    overflow: hidden;
+}
+
+.agendamento-card-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.mini-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(220, 129, 185, 0.35);
 }
 
 .agendamento-card-body {

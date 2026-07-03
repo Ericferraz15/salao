@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Eduarda Ferraz Studio de Beleza — Nail Design, alongamento em fibra, manicure e pedicure premium.">
     <title>{% block title %}Salão Premium - Eduarda Ferraz{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💅</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'staticCliente/home.css' %}">
@@ -29,6 +30,9 @@
                     <li><a href="{% url 'home' %}#services">Serviços</a></li>
                     <li><a href="{% url 'galeria' %}">Galeria</a></li>
                     <li><a href="{% url 'home' %}#contact">Contato</a></li>
+                    {% if not user.is_staff %}
+                    <li><a href="{% url 'criar_agendamento' %}" class="nav-agendar"><i class="far fa-calendar-check"></i> Agendar</a></li>
+                    {% endif %}
                 </ul>
 
                 <div class="auth-buttons">

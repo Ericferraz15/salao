@@ -38,6 +38,11 @@
                                 {{ ag.data_hora_inicio|date:"d/m/Y" }}
                             </span>
                         </div>
+                        {% if ag.servico.foto %}
+                        <div class="agendamento-card-foto">
+                            <img src="{{ ag.servico.foto.url }}" alt="{{ ag.servico.nome }}" loading="lazy">
+                        </div>
+                        {% endif %}
                         <div class="agendamento-card-body">
                             <div class="agendamento-info">
                                 <div class="info-row">
@@ -49,12 +54,16 @@
                                     <span>{{ ag.servico.nome }}</span>
                                 </div>
                                 <div class="info-row">
-                                    <i class="fas fa-user"></i>
+                                    {% if ag.profissional.foto %}
+                                        <img src="{{ ag.profissional.foto.url }}" alt="" class="mini-avatar">
+                                    {% else %}
+                                        <i class="fas fa-user"></i>
+                                    {% endif %}
                                     <span>{{ ag.profissional.usuario.get_full_name }}</span>
                                 </div>
                                 <div class="info-row">
                                     <i class="fas fa-tag"></i>
-                                    <span>R$ {{ ag.valor_cobrado|default:"—" }}</span>
+                                    <span>R$ {{ ag.valor_cobrado|floatformat:2|default:"—" }}</span>
                                 </div>
                             </div>
                         </div>

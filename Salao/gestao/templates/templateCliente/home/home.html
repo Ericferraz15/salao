@@ -126,6 +126,36 @@
         </div>
     </section>
 
+    <!-- Equipe -->
+    {% if equipe %}
+    <section class="equipe" id="equipe">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Quem cuida de você</span>
+                <h2>Nossa Equipe</h2>
+                <p class="section-desc">Profissionais apaixonadas pelo que fazem, prontas para te receber.</p>
+            </div>
+
+            <div class="equipe-grid">
+                {% for profissional in equipe %}
+                <div class="equipe-card">
+                    <div class="equipe-foto">
+                        {% if profissional.foto %}
+                            <img src="{{ profissional.foto.url }}" alt="Foto de {{ profissional.usuario.get_full_name }}" loading="lazy">
+                        {% else %}
+                            <span class="equipe-inicial">{{ profissional.usuario.first_name|slice:":1" }}{{ profissional.usuario.last_name|slice:":1" }}</span>
+                        {% endif %}
+                    </div>
+                    <h3>{{ profissional.usuario.get_full_name }}</h3>
+                    <p>{{ profissional.especializacao }}</p>
+                    <a href="{% url 'criar_agendamento' %}" class="btn-service">Agendar com ela <i class="fas fa-arrow-right"></i></a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
     <!-- Galeria (teaser) -->
     <section class="galeria-teaser" id="galeria-teaser">
         <div class="container">

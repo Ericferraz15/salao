@@ -31,6 +31,15 @@ def criar_agendamento_controller(request):
     try:
         cliente_profile = ClienteProfile.objects.get(usuario=request.user)
     except ClienteProfile.DoesNotExist:
+        # Contas da equipe (dona/profissionais) não têm perfil de cliente —
+        # agendamento de cliente se gerencia pelo painel administrativo.
+        if request.user.is_staff:
+            messages.info(
+                request,
+                'Sua conta é administrativa: os agendamentos das clientes '
+                'são gerenciados pelo painel.'
+            )
+            return redirect('dashboard_admin')
         messages.error(
             request,
             'Seu usuário não possui um perfil de cliente. Contate o suporte.'

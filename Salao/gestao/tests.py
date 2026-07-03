@@ -925,6 +925,31 @@ class DashboardClienteHistoricoTests(_BaseAgenda):
         self.assertEqual([a.pk for a in historico], [recente.pk, antigo.pk])
 
 
+class HomeEquipeTests(TestCase):
+    """A home mostra a seção de equipe com as profissionais ativas."""
+
+    def setUp(self) -> None:
+        user = Usuario.objects.create_user(
+            username='equipe1', password='abc12345',
+            email='equipe1@t.com', celular='13000000001',
+            first_name='Carolina', last_name='Mendes',
+        )
+        self.func = Funcionario.objects.create(
+            usuario=user, especializacao='Nail Designer', esta_ativo=True,
+        )
+
+    def test_home_lista_equipe_ativa(self) -> None:
+        resp = HttpClient().get(reverse('home'))
+        self.assertContains(resp, 'Nossa Equipe')
+        self.assertContains(resp, 'Carolina Mendes')
+
+    def test_profissional_inativa_nao_aparece(self) -> None:
+        self.func.esta_ativo = False
+        self.func.save(update_fields=['esta_ativo'])
+        resp = HttpClient().get(reverse('home'))
+        self.assertNotContains(resp, 'Carolina Mendes')
+
+
 class FinanceiroServiceTests(TestCase):
     """Resumo financeiro, gráfico de receita e lançamentos manuais."""
 
