@@ -121,7 +121,18 @@ def cancelar_agendamento_controller(request, agendamento_id: int):
 # ═══════════════════════════════════════════════════════════════════════════
 
 def is_admin(user) -> bool:
+    """Dona do salão: acesso total ao painel administrativo."""
     return user.is_staff or user.is_superuser
+
+
+def tem_funcionario(user) -> bool:
+    """True se o usuário é da EQUIPE (tem registro de Funcionario).
+
+    É o "portão" do painel do profissional. Note que a dona (seed) também
+    pode ter um Funcionario; como ela é is_staff/superuser, o menu a manda
+    para o painel completo — este painel é o fallback da profissional comum.
+    """
+    return Funcionario.objects.filter(usuario=user).exists()
 
 
 # ── Handlers de cada formulário do painel (POST) ────────────────────────────
@@ -161,6 +172,10 @@ def _tratar_add_funcionario(request, forms_da_pagina):
         # Funcionário falhar, o usuário não fica órfão (staff sem registro
         # de profissional, com e-mail/celular presos pelo unique).
         with transaction.atomic():
+            # NÃO marcamos is_staff: profissional NÃO é admin. O acesso da
+            # equipe vem do próprio registro de Funcionario (ver is_equipe /
+            # user.is_funcionario), que dá o painel do profissional — só a
+            # própria agenda e o caixa, sem os cadastros da dona.
             user = Usuario.objects.create_user(
                 username=email,
                 email=email,
@@ -169,8 +184,6 @@ def _tratar_add_funcionario(request, forms_da_pagina):
                 celular=celular,
                 password=senha_temporaria,
             )
-            user.is_staff = True
-            user.save(update_fields=['is_staff'])
 
             funcionario = form.save(commit=False)
             funcionario.usuario = user
@@ -414,3 +427,115 @@ def remover_jornada_controller(request, jornada_id: int):
         f'({jornada.get_dia_da_semana_display()}) removida.'
     )
     return redirect('dashboard_admin')
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PAINEL DO PROFISSIONAL (FUNCIONÁRIO)
+# ═══════════════════════════════════════════════════════════════════════════
+# Acesso restrito de propósito: a profissional só vê a PRÓPRIA agenda e só
+# pode lançar no caixa. Nada de cadastrar serviço/funcionário/produto/jornada
+# nem visão financeira do salão — isso é exclusivo do painel da dona.
+
+@login_required
+@user_passes_test(tem_funcionario, login_url='home')
+def dashboard_funcionario_controller(request):
+    """Painel do profissional: agenda do dia (dela) + lançamento no caixa."""
+    funcionario = (
+        Funcionario.objects.select_related('usuario').get(usuario=request.user)
+    )
+
+    transacao_form = TransacaoForm()
+    if request.method == 'POST' and 'add_transacao' in request.POST:
+        transacao_form = TransacaoForm(request.POST)
+        if transacao_form.is_valid():
+            try:
+                lancar_transacao(
+                    tipo=transacao_form.cleaned_data['tipo'],
+                    valor=transacao_form.cleaned_data['valor'],
+                    descricao=transacao_form.cleaned_data['descricao'],
+                )
+            except ValidationError as erro:
+                for msg in erro.messages:
+                    messages.error(request, msg)
+            else:
+                messages.success(request, 'Lançamento registrado no caixa!')
+                return redirect('dashboard_funcionario')
+        else:
+            messages.error(request, 'Erro no lançamento. Verifique os dados.')
+
+    agora_local = timezone.localtime(timezone.now())
+    hoje = agora_local.date()
+
+    # Agenda de hoje da profissional (inclui concluídos, para acompanhar o
+    # dia); cancelados ficam de fora. select_related evita N+1 na tabela.
+    agenda_do_dia = (
+        Agendamento.objects
+        .filter(profissional=funcionario, data_hora_inicio__date=hoje)
+        .exclude(status='CANCELADO')
+        .select_related('cliente__usuario', 'servico')
+        .order_by('data_hora_inicio')
+    )
+    # Próximos dias (só o que ainda está por atender), para ela se organizar.
+    proximos = (
+        Agendamento.objects
+        .filter(
+            profissional=funcionario,
+            data_hora_inicio__date__gt=hoje,
+            status__in=['PENDENTE', 'CONFIRMADO'],
+        )
+        .select_related('cliente__usuario', 'servico')
+        .order_by('data_hora_inicio')[:10]
+    )
+    transacoes_recentes = TransacaoFinanceira.objects.order_by('-data_hora')[:8]
+
+    return render(request, 'templateFuncionario/dashboard.html', {
+        'funcionario': funcionario,
+        'hoje': hoje,
+        'agenda_do_dia': agenda_do_dia,
+        'proximos': proximos,
+        'transacao_form': transacao_form,
+        'transacoes_recentes': transacoes_recentes,
+    })
+
+
+@login_required
+@user_passes_test(tem_funcionario, login_url='home')
+def gerenciar_meu_agendamento_controller(request, agendamento_id: int):
+    """Ações da profissional sobre um agendamento DELA.
+
+    Filtrar por profissional=funcionario é a AUTORIZAÇÃO: uma profissional
+    não confirma/conclui/cancela agendamento que não é dela. Mesmo conjunto
+    de ações do painel da dona, mas restrito à própria agenda.
+    """
+    if request.method != 'POST':
+        return redirect('dashboard_funcionario')
+
+    funcionario = Funcionario.objects.get(usuario=request.user)
+    try:
+        agendamento = Agendamento.objects.get(
+            id=agendamento_id, profissional=funcionario,
+        )
+    except Agendamento.DoesNotExist:
+        messages.error(request, 'Agendamento não encontrado.')
+        return redirect('dashboard_funcionario')
+
+    acoes = {
+        'confirmar': (confirmar_agendamento, 'Agendamento confirmado com sucesso!'),
+        'concluir': (concluir_agendamento, 'Agendamento concluído e receita lançada!'),
+        'cancelar': (cancelar_agendamento, 'Agendamento cancelado.'),
+        'no_show': (marcar_no_show, 'Agendamento marcado como falta (não compareceu).'),
+    }
+    acao = request.POST.get('acao')
+    if acao not in acoes:
+        messages.error(request, 'Ação inválida.')
+        return redirect('dashboard_funcionario')
+
+    funcao, msg_sucesso = acoes[acao]
+    try:
+        funcao(agendamento.id)
+        messages.success(request, msg_sucesso)
+    except ValidationError as erro:
+        for msg in erro.messages:
+            messages.error(request, msg)
+
+    return redirect('dashboard_funcionario')

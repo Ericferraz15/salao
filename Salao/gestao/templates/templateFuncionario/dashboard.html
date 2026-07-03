@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Meu Painel - Eduarda Ferraz{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Painel do profissional: reaproveita as classes do painel da dona,
+       mas só com o que a profissional precisa (agenda + caixa). As
+       variáveis de cor (--primary-mauve, etc.) vêm do home.css global. */
+    .admin-dashboard {
+        padding: 120px 0 60px;
+        background: var(--background-alt);
+        min-height: 100vh;
+    }
+    .admin-dashboard .dashboard-header { text-align: center; margin-bottom: 36px; }
+    .admin-dashboard .dashboard-header h1 {
+        font-family: 'Playfair Display', serif;
+        color: var(--text-heading);
+        font-size: 2.5rem;
+    }
+    .admin-dashboard .dashboard-header p { color: var(--text-muted); font-size: 1.05rem; }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+        align-items: start;
+    }
+    @media (max-width: 992px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+    .admin-section {
+        background: white;
+        border-radius: var(--radius-md);
+        padding: 30px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 30px;
+    }
+    .dashboard-grid .admin-section { margin-bottom: 0; }
+    .admin-section h2 {
+        font-family: 'Playfair Display', serif;
+        color: var(--text-heading);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--accent-rosegold-light);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.35rem;
+    }
+    .admin-section h2 i { color: var(--primary-mauve); }
+    .admin-section h3 { margin-top: 30px; font-family: 'Playfair Display', serif; font-size: 1.1rem; }
+
+    .recent-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .recent-table thead { background: var(--background-alt); }
+    .recent-table th {
+        padding: 12px 14px; text-align: left; font-weight: 600; font-size: 0.8rem;
+        text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-heading);
+        border-bottom: 2px solid rgba(0,0,0,0.06); white-space: nowrap;
+    }
+    .recent-table td { padding: 12px 14px; border-bottom: 1px solid rgba(0,0,0,0.04); color: var(--text-body); }
+    .recent-table tbody tr:hover { background: rgba(220, 129, 185, 0.04); }
+    .linha-concluida td { opacity: 0.55; }
+
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; color: var(--text-heading); font-weight: 500; font-size: 0.9rem; }
+    .form-control {
+        width: 100%; padding: 10px 15px; border: 1px solid rgba(0,0,0,0.1);
+        border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif;
+        transition: var(--transition-fast); background: #fff;
+    }
+    .form-control:focus { outline: none; border-color: var(--primary-mauve); box-shadow: 0 0 0 3px rgba(220, 129, 185, 0.12); }
+    .btn-submit {
+        background: var(--gradient-mauve); color: var(--text-heading); border: none;
+        padding: 12px 20px; border-radius: var(--radius-sm); cursor: pointer;
+        font-family: 'Outfit', sans-serif; font-weight: 600; width: 100%;
+        margin-top: 10px; transition: var(--transition-fast);
+    }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .erro-campo { color: #991B1B; font-size: 0.8rem; }
+
+    .item-list { list-style: none; padding: 0; margin-top: 16px; max-height: 340px; overflow-y: auto; }
+    .item-list li { padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; }
+    .item-list li:last-child { border-bottom: none; }
+    .item-list .info { flex: 1; min-width: 0; }
+
+    .col-acoes { white-space: nowrap; }
+    .acoes-agendamento { display: flex; gap: 6px; }
+    .acoes-agendamento form { display: inline; margin: 0; }
+    .btn-acao {
+        border: none; cursor: pointer; width: 34px; height: 34px; border-radius: 9px;
+        font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center;
+        transition: all 0.2s ease;
+    }
+    .btn-acao:hover { transform: translateY(-1px); filter: brightness(0.96); }
+    .acao-confirmar { background: #DCFCE7; color: #166534; }
+    .acao-concluir  { background: #E0E7FF; color: #3730A3; }
+    .acao-falta     { background: #F3F4F6; color: #6B7280; }
+    .acao-cancelar  { background: #FEE2E2; color: #DC2626; }
+
+    .btn-whatsapp {
+        display: inline-flex; align-items: center; gap: 6px; background: #DCFCE7;
+        color: #166534; border-radius: var(--radius-pill); padding: 5px 12px;
+        font-size: 0.8rem; font-weight: 600; transition: var(--transition-fast);
+    }
+    .btn-whatsapp:hover { background: #BBF7D0; }
+
+    .transacao-valor-entrada { color: #166534; font-weight: 600; white-space: nowrap; }
+    .transacao-valor-saida { color: #DC2626; font-weight: 600; white-space: nowrap; }
+
+    .vazio-msg { text-align: center; color: var(--text-muted); padding: 26px 10px; font-size: 0.92rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="admin-dashboard">
+    <div class="container">
+
+        <div class="dashboard-header">
+            <h1>Olá, {{ funcionario.usuario.first_name }}!</h1>
+            <p>{{ funcionario.especializacao }} — sua agenda de hoje e o caixa do salão.</p>
+        </div>
+
+        <!-- ═══ MINHA AGENDA DE HOJE ═══ -->
+        <div class="admin-section">
+            <h2><i class="fas fa-calendar-day"></i> Minha Agenda de Hoje</h2>
+            {% if agenda_do_dia %}
+            <div style="overflow-x: auto;">
+                <table class="recent-table">
+                    <thead>
+                        <tr>
+                            <th>Horário</th>
+                            <th>Cliente</th>
+                            <th>Contato</th>
+                            <th>Serviço</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ag in agenda_do_dia %}
+                        <tr {% if ag.status == 'CONCLUIDO' %}class="linha-concluida"{% endif %}>
+                            <td><strong>{{ ag.data_hora_inicio|date:"H:i" }}</strong> — {{ ag.data_hora_fim|date:"H:i" }}</td>
+                            <td>{{ ag.cliente.usuario.get_full_name }}</td>
+                            <td>
+                                {% if ag.cliente.usuario.celular_digitos %}
+                                <a class="btn-whatsapp" target="_blank" rel="noopener"
+                                   href="https://wa.me/55{{ ag.cliente.usuario.celular_digitos }}?text={% filter urlencode %}Olá, {{ ag.cliente.usuario.first_name }}! Confirmando seu horário de {{ ag.servico.nome }} hoje às {{ ag.data_hora_inicio|date:"H:i" }} no Studio Eduarda Ferraz 💖{% endfilter %}">
+                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                </a>
+                                {% else %}
+                                <span style="color: var(--text-muted);">—</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ ag.servico.nome }}</td>
+                            <td><span class="status-badge status-{{ ag.status|lower }}">{{ ag.get_status_display }}</span></td>
+                            <td class="col-acoes">{% include 'templateAdmin/_acoes_agendamento.html' with acao_url='gerenciar_meu_agendamento' %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+                <p class="vazio-msg"><i class="far fa-calendar" style="margin-right:6px;"></i>Nenhum agendamento para hoje. Dia livre!</p>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-grid">
+
+            <!-- ═══ PRÓXIMOS AGENDAMENTOS ═══ -->
+            <div class="admin-section">
+                <h2><i class="fas fa-calendar-week"></i> Próximos Atendimentos</h2>
+                {% if proximos %}
+                <ul class="item-list">
+                    {% for ag in proximos %}
+                    <li>
+                        <div class="info">
+                            <strong>{{ ag.cliente.usuario.get_full_name }}</strong> — {{ ag.servico.nome }}<br>
+                            <small style="color: var(--text-muted);">
+                                {{ ag.data_hora_inicio|date:"d/m/Y" }} às {{ ag.data_hora_inicio|date:"H:i" }}
+                            </small>
+                        </div>
+                        <span class="status-badge status-{{ ag.status|lower }}">{{ ag.get_status_display }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                    <p class="vazio-msg">Nada agendado para os próximos dias.</p>
+                {% endif %}
+            </div>
+
+            <!-- ═══ CAIXA ═══ -->
+            <div class="admin-section">
+                <h2><i class="fas fa-cash-register"></i> Caixa — lançar entrada/despesa</h2>
+                <form method="POST" action="{% url 'dashboard_funcionario' %}">
+                    {% csrf_token %}
+                    {% for field in transacao_form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<span class="erro-campo">{{ field.errors.0 }}</span>{% endif %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" name="add_transacao" class="btn-submit">Registrar no Caixa</button>
+                </form>
+
+                <h3>Últimos lançamentos</h3>
+                <ul class="item-list">
+                    {% for t in transacoes_recentes %}
+                    <li>
+                        <div class="info">
+                            <strong>{{ t.descricao|truncatechars:46 }}</strong><br>
+                            <small style="color: var(--text-muted);">{{ t.data_hora|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        {% if t.tipo == 'ENTRADA' %}
+                            <span class="transacao-valor-entrada">+ R$ {{ t.valor|floatformat:2 }}</span>
+                        {% else %}
+                            <span class="transacao-valor-saida">− R$ {{ t.valor|floatformat:2 }}</span>
+                        {% endif %}
+                    </li>
+                    {% empty %}
+                    <li><div class="info"><small style="color: var(--text-muted);">Nenhum lançamento ainda.</small></div></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+{% endblock %}

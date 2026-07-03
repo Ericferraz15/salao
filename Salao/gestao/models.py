@@ -75,6 +75,17 @@ class Usuario(AbstractUser):
         """
         return ''.join(filter(str.isdigit, self.celular or ''))
 
+    @property
+    def is_funcionario(self) -> bool:
+        """True se o usuário é da EQUIPE (tem um registro de Funcionario).
+
+        É o "crachá" de profissional, análogo ao ClienteProfile do cliente.
+        Serve para separar papéis: a dona é identificada por
+        is_staff/is_superuser; a profissional, por este vínculo. Usado nos
+        templates ({% if user.is_funcionario %}) e nas checagens de acesso.
+        """
+        return Funcionario.objects.filter(usuario=self).exists()
+
 
 class ClienteProfile(models.Model):
     """Marca um Usuario como CLIENTE do salão (padrão "profile").

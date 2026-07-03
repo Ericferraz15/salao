@@ -30,7 +30,7 @@
                     <li><a href="{% url 'home' %}#services">Serviços</a></li>
                     <li><a href="{% url 'galeria' %}">Galeria</a></li>
                     <li><a href="{% url 'home' %}#contact">Contato</a></li>
-                    {% if not user.is_staff %}
+                    {% if not user.is_staff and not user.is_funcionario %}
                     <li><a href="{% url 'criar_agendamento' %}" class="nav-agendar"><i class="far fa-calendar-check"></i> Agendar</a></li>
                     {% endif %}
                 </ul>
@@ -39,6 +39,8 @@
                     {% if user.is_authenticated %}
                         {% if user.is_staff %}
                             <a href="{% url 'dashboard_admin' %}" class="btn-nav btn-login"><i class="fas fa-cog"></i> Painel</a>
+                        {% elif user.is_funcionario %}
+                            <a href="{% url 'dashboard_funcionario' %}" class="btn-nav btn-login"><i class="fas fa-calendar-day"></i> Meu Painel</a>
                         {% else %}
                             <a href="{% url 'dashboard_cliente' %}" class="btn-nav btn-login">Minha Conta</a>
                         {% endif %}
@@ -85,6 +87,8 @@
                         <li><a href="{% url 'criar_agendamento' %}">Agendamento</a></li>
                         {% if user.is_staff %}
                         <li><a href="{% url 'dashboard_admin' %}">Painel Administrativo</a></li>
+                        {% elif user.is_funcionario %}
+                        <li><a href="{% url 'dashboard_funcionario' %}">Meu Painel</a></li>
                         {% endif %}
                     </ul>
                 </div>

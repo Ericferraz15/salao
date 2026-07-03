@@ -1,28 +1,31 @@
 {% comment %}
 Botões de ação de UM agendamento (usado na Agenda do Dia e em Últimos
 Agendamentos). Espera a variável `ag` no contexto do include.
-Cada botão é um mini-form POST para /admin-dashboard/agendamento/<id>/.
+
+`acao_url` (opcional): nome da rota que recebe o POST. Por padrão é a do
+painel da dona ('gerenciar_agendamento'); o painel do profissional inclui
+com `acao_url='gerenciar_meu_agendamento'` para agir só na própria agenda.
 {% endcomment %}
 {% if ag.status == 'PENDENTE' or ag.status == 'CONFIRMADO' %}
 <div class="acoes-agendamento">
     {% if ag.status == 'PENDENTE' %}
-    <form method="post" action="{% url 'gerenciar_agendamento' ag.id %}">
+    <form method="post" action="{% url acao_url|default:'gerenciar_agendamento' ag.id %}">
         {% csrf_token %}
         <input type="hidden" name="acao" value="confirmar">
         <button type="submit" class="btn-acao acao-confirmar" title="Confirmar"><i class="fas fa-check"></i></button>
     </form>
     {% endif %}
-    <form method="post" action="{% url 'gerenciar_agendamento' ag.id %}">
+    <form method="post" action="{% url acao_url|default:'gerenciar_agendamento' ag.id %}">
         {% csrf_token %}
         <input type="hidden" name="acao" value="concluir">
         <button type="submit" class="btn-acao acao-concluir" title="Concluir (lança receita)"><i class="fas fa-circle-check"></i></button>
     </form>
-    <form method="post" action="{% url 'gerenciar_agendamento' ag.id %}">
+    <form method="post" action="{% url acao_url|default:'gerenciar_agendamento' ag.id %}">
         {% csrf_token %}
         <input type="hidden" name="acao" value="no_show">
         <button type="submit" class="btn-acao acao-falta" title="Não compareceu"><i class="fas fa-user-slash"></i></button>
     </form>
-    <form method="post" action="{% url 'gerenciar_agendamento' ag.id %}" onsubmit="return confirm('Cancelar este agendamento?');">
+    <form method="post" action="{% url acao_url|default:'gerenciar_agendamento' ag.id %}" onsubmit="return confirm('Cancelar este agendamento?');">
         {% csrf_token %}
         <input type="hidden" name="acao" value="cancelar">
         <button type="submit" class="btn-acao acao-cancelar" title="Cancelar"><i class="fas fa-xmark"></i></button>

@@ -28,3 +28,6 @@ media/
 # OS
 .DS_Store
 Thumbs.db
+
+# backup do .git do clone externo antigo (pode apagar quando quiser)
+.git-outer-backup/
