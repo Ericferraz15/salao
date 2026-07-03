@@ -107,6 +107,19 @@ class Servico(models.Model):
     class Meta:
         verbose_name = 'Serviço'
         verbose_name_plural = 'Serviços'
+        # Defesa em profundidade no banco (além da validação do ServicoForm):
+        # garante preço não-negativo e duração positiva mesmo em criações diretas
+        # (seed, shell, admin).
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(preco__gte=0),
+                name='servico_preco_nao_negativo',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(duracao_minutos__gte=1),
+                name='servico_duracao_positiva',
+            ),
+        ]
 
     def __str__(self):
         return self.nome
@@ -169,6 +182,14 @@ class Agendamento(models.Model):
                 fields=['profissional', 'data_hora_inicio', 'data_hora_fim'],
                 name='idx_agendamento_conflito',
             )
+        ]
+        # Garante no banco que o intervalo é válido (fim depois do início),
+        # independentemente de quem cria o registro.
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(data_hora_fim__gt=models.F('data_hora_inicio')),
+                name='agendamento_fim_depois_inicio',
+            ),
         ]
 
     def __str__(self):

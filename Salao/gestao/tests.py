@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.test import TestCase, Client as HttpClient
 from django.urls import reverse
 from django.utils import timezone
@@ -830,6 +831,37 @@ class DashboardClienteHistoricoTests(_BaseAgenda):
 
         historico = list(resp.context['historico'])
         self.assertEqual([a.pk for a in historico], [recente.pk, antigo.pk])
+
+
+class ConstraintsBancoTests(_BaseAgenda):
+    """Defesa em profundidade: as regras críticas também valem no BANCO.
+
+    Os forms já validam (ServicoForm etc.), mas criações diretas (seed, shell,
+    Django admin, código futuro) pulam o form. As CheckConstraints da migration
+    0006 garantem que dados inválidos não entram nem por esses caminhos.
+    """
+
+    def test_banco_rejeita_preco_negativo(self) -> None:
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Servico.objects.create(
+                nome='Inválido', descricao='x', duracao_minutos=30, preco=-1,
+            )
+
+    def test_banco_rejeita_duracao_zero(self) -> None:
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Servico.objects.create(
+                nome='Inválido', descricao='x', duracao_minutos=0, preco=10,
+            )
+
+    def test_banco_rejeita_agendamento_com_fim_antes_do_inicio(self) -> None:
+        inicio = proxima_segunda_10h()
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Agendamento.objects.create(
+                cliente=self.cliente, profissional=self.func, servico=self.servico,
+                data_hora_inicio=inicio,
+                data_hora_fim=inicio - timedelta(minutes=30),
+                status='PENDENTE', valor_cobrado=self.servico.preco,
+            )
 
 
 class ServicoFormTests(TestCase):
