@@ -1,0 +1,15 @@
+# Caddyfile — proxy reverso de produção.
+#
+# O Caddy resolve sozinho o que daria trabalho no nginx:
+#   - obtém e RENOVA o certificado HTTPS (Let's Encrypt) para o DOMINIO;
+#   - redireciona http:// -> https:// automaticamente;
+#   - preenche o header X-Forwarded-Proto que o Django usa para saber que
+#     a requisição chegou por https (ver SECURE_PROXY_SSL_HEADER no settings).
+#
+# {$DOMINIO} vem da variável de ambiente do serviço caddy (docker-compose.prod.yml),
+# que por sua vez lê DOMINIO=... do .env.
+
+{$DOMINIO} {
+    encode gzip
+    reverse_proxy web:8000
+}

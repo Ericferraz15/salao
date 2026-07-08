@@ -1,0 +1,60 @@
+# Stack de PRODUÇÃO — sobe com:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Diferenças em relação ao docker-compose.yml (que é o de desenvolvimento):
+#   1. Caddy na frente: termina o HTTPS (certificado Let's Encrypt
+#      automático para o DOMINIO do .env) e repassa para o gunicorn.
+#   2. Nenhuma porta do Django/Postgres exposta no host — só o Caddy
+#      (80/443) fala com a internet; o resto conversa pela rede interna.
+#   3. Sem bind-mount do código (`.:/app`): a imagem é fechada no build.
+#      Deploy de código novo = git pull + up --build (o entrypoint roda
+#      migrate/collectstatic sozinho).
+#   4. Volume para media/ : as fotos enviadas sobrevivem a rebuilds.
+#   5. restart: unless-stopped — tudo volta sozinho se o servidor reiniciar.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  web:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - media_files:/app/Salao/media
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # O Caddyfile lê {$DOMINIO} daqui; defina DOMINIO=seu-dominio.com.br no .env
+      - DOMINIO=${DOMINIO}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data        # certificados Let's Encrypt (NUNCA apague)
+      - caddy_config:/config
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  media_files:
+  caddy_data:
+  caddy_config:
