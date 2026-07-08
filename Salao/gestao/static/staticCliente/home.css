@@ -1195,6 +1195,74 @@ footer {
     width: 100%;
 }
 
+/* Páginas legais (Termos de Uso e Política de Privacidade) */
+.pagina-legal {
+    padding: 140px 20px 80px;
+}
+
+.pagina-legal .container {
+    max-width: 760px;
+}
+
+.pagina-legal h1 {
+    font-size: 2.2rem;
+    color: var(--text-heading);
+    margin-bottom: 6px;
+}
+
+.pagina-legal .legal-atualizacao {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 40px;
+}
+
+.pagina-legal h2 {
+    font-size: 1.25rem;
+    color: var(--text-heading);
+    margin: 34px 0 10px;
+}
+
+.pagina-legal p,
+.pagina-legal li {
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 12px;
+}
+
+.pagina-legal ul {
+    padding-left: 22px;
+    margin-bottom: 12px;
+}
+
+.pagina-legal a {
+    color: var(--primary-mauve-dark);
+    font-weight: 600;
+}
+
+/* Divisor "ou" entre o formulário e o botão "Entrar com o Google" */
+.divisor-ou {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 26px 0 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.divisor-ou::before,
+.divisor-ou::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+/* O botão em si é desenhado pelo script do Google; aqui só o centralizamos */
+.botao-google {
+    display: flex;
+    justify-content: center;
+}
+
 .auth-footer {
     text-align: center;
     margin-top: 30px;
@@ -1332,6 +1400,8 @@ footer {
     grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
 }
 
+/* O card é um <label>: precisa vencer a regra ".premium-form label" */
+.premium-form .opcao-card,
 .opcao-card {
     position: relative;
     display: flex;
@@ -1433,6 +1503,7 @@ footer {
 }
 
 /* Card de profissional: horizontal, com avatar redondo */
+.premium-form .pro-card,
 .pro-card {
     flex-direction: row;
     align-items: center;
@@ -1477,6 +1548,155 @@ footer {
 .pro-card .opcao-check {
     position: static;
     margin-left: auto;
+}
+
+/* ==================================== */
+/* 9c. AGENDAMENTO NO CELULAR           */
+/* Tudo mais compacto: cards viram      */
+/* linhas com thumbnail e os chips      */
+/* ficam em grade uniforme.             */
+/* ==================================== */
+@media (max-width: 600px) {
+    .auth-body {
+        padding: 84px 12px 40px;
+    }
+
+    .auth-card {
+        padding: 26px 16px;
+    }
+
+    .auth-header {
+        margin-bottom: 22px;
+    }
+
+    .auth-header h2 {
+        font-size: 1.45rem;
+        margin-bottom: 6px;
+    }
+
+    .auth-header p {
+        font-size: 0.88rem;
+    }
+
+    .premium-form p, .form-group {
+        margin-bottom: 18px;
+    }
+
+    .passo-label {
+        font-size: 0.95rem !important;
+        margin-bottom: 10px !important;
+    }
+
+    .passo-numero {
+        width: 22px;
+        height: 22px;
+        font-size: 0.78rem;
+    }
+
+    .escolha-grid,
+    .escolha-servicos,
+    .escolha-profissionais {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    /* Card de serviço deixa de ser "cartaz" e vira linha com thumbnail */
+    .premium-form .opcao-card {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+    }
+
+    .premium-form .opcao-card:hover {
+        transform: none;
+    }
+
+    .opcao-foto {
+        width: 54px;
+        height: 54px;
+        flex-shrink: 0;
+        border-radius: var(--radius-sm);
+    }
+
+    .foto-placeholder {
+        font-size: 1.2rem;
+    }
+
+    .opcao-info {
+        flex: 1;
+        min-width: 0;
+        padding: 0;
+        gap: 2px;
+    }
+
+    .opcao-info strong {
+        font-size: 0.9rem;
+    }
+
+    .opcao-check {
+        position: static;
+        margin-left: auto;
+        flex-shrink: 0;
+        width: 22px;
+        height: 22px;
+        font-size: 0.65rem;
+    }
+
+    .pro-card {
+        padding: 10px 12px;
+        gap: 12px;
+    }
+
+    .pro-avatar {
+        width: 48px;
+        height: 48px;
+    }
+
+    .avatar-inicial {
+        font-size: 1rem;
+    }
+
+    /* Dias e horários em grade: chips do mesmo tamanho, fáceis de tocar */
+    .chip-container {
+        display: grid;
+        gap: 8px;
+    }
+
+    #dias-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    #horarios-container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .date-chip {
+        padding: 8px 4px;
+    }
+
+    .date-chip strong {
+        font-size: 0.85rem;
+    }
+
+    .date-chip span {
+        font-size: 0.72rem;
+    }
+
+    .time-chip {
+        padding: 10px 4px;
+        font-size: 0.92rem;
+    }
+
+    .auth-card .btn-hero {
+        padding: 14px 24px;
+        font-size: 0.95rem;
+    }
+
+    .auth-footer {
+        margin-top: 22px;
+        padding-top: 18px;
+    }
 }
 
 .escolha-vazia {

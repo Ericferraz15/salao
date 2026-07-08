@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Política de Privacidade - Studio Eduarda Ferraz{% endblock %}
+
+{% block content %}
+<div class="pagina-legal">
+    <div class="container">
+        <h1>Política de Privacidade</h1>
+        <p class="legal-atualizacao">Última atualização: julho de 2026</p>
+
+        <h2>1. Quais dados guardamos</h2>
+        <p>
+            Para o site funcionar, guardamos apenas o necessário para agendar e
+            confirmar seus horários:
+        </p>
+        <ul>
+            <li><strong>Cadastro:</strong> nome, sobrenome, e-mail e celular (WhatsApp);</li>
+            <li><strong>Agendamentos:</strong> serviço, profissional, data/horário e situação (confirmado, concluído, cancelado);</li>
+            <li><strong>Entrar com o Google:</strong> se você usar o botão, recebemos do Google somente seu nome e e-mail — nunca a sua senha do Google.</li>
+        </ul>
+
+        <h2>2. Para que usamos</h2>
+        <p>
+            Os dados servem para identificar você no login, organizar a agenda do
+            estúdio e entrar em contato pelo WhatsApp para confirmar ou avisar
+            sobre o seu horário. <strong>Não vendemos nem compartilhamos seus
+            dados com terceiros</strong> para publicidade.
+        </p>
+
+        <h2>3. Cookies</h2>
+        <p>
+            Usamos apenas cookies essenciais: o de sessão (que mantém você
+            logada) e o de segurança contra falsificação de formulários (CSRF).
+            Não usamos cookies de rastreamento ou publicidade.
+        </p>
+
+        <h2>4. Segurança</h2>
+        <p>
+            Senhas são armazenadas com criptografia irreversível (hash) — nem o
+            estúdio consegue lê-las. O acesso aos dados das clientes é restrito à
+            equipe do estúdio, e o site funciona sob conexão segura (HTTPS).
+        </p>
+
+        <h2>5. Seus direitos (LGPD)</h2>
+        <p>
+            Conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018), você
+            pode pedir a qualquer momento o acesso, a correção ou a exclusão dos
+            seus dados. Basta falar com o estúdio pelos contatos da
+            <a href="{% url 'home' %}#contact">página inicial</a> — a exclusão da
+            conta remove seus dados pessoais, preservando apenas registros
+            financeiros exigidos por lei.
+        </p>
+    </div>
+</div>
+{% endblock %}

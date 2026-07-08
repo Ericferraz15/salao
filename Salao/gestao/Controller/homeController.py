@@ -74,3 +74,16 @@ def galeria(request):
         'categorias': CATEGORIAS_GALERIA,
         'trabalhos': trabalhos,
     })
+
+
+def termos(request):
+    """Termos de Uso — página estática exigida pelo rodapé (e pelo bom senso
+    jurídico: o site guarda dados pessoais e firma horários com clientes)."""
+    return render(request, 'templateCliente/legal/termos.html')
+
+
+def privacidade(request):
+    """Política de Privacidade — LGPD básica: quais dados o site guarda
+    (nome, e-mail, celular, agendamentos), para quê, e os direitos da
+    cliente sobre eles."""
+    return render(request, 'templateCliente/legal/privacidade.html')

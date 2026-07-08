@@ -11,9 +11,11 @@ from django.contrib.auth import views as auth_views
 # pyrefly: ignore [missing-import]
 from .Controller.agendaController import criar_agendamento_controller, api_horarios_disponiveis
 # pyrefly: ignore [missing-import]
-from .Controller.homeController import home, galeria
+from .Controller.homeController import home, galeria, termos, privacidade
 # pyrefly: ignore [missing-import]
 from .Controller.cadastroController import cliente_registro_controller
+# pyrefly: ignore [missing-import]
+from .Controller.loginGoogleController import login_google_controller
 # pyrefly: ignore [missing-import]
 from .Controller.dashboardController import (
     dashboard_cliente_controller,
@@ -31,6 +33,8 @@ from .forms import LoginForm
 urlpatterns = [
     path('', home, name='home'),
     path('galeria/', galeria, name='galeria'),
+    path('termos/', termos, name='termos'),
+    path('privacidade/', privacidade, name='privacidade'),
     path('admin-dashboard/', dashboard_admin_controller, name='dashboard_admin'),
     path('admin-dashboard/agendamento/<int:agendamento_id>/', gerenciar_agendamento_controller, name='gerenciar_agendamento'),
     path('admin-dashboard/produto/<int:produto_id>/estoque/', ajustar_estoque_controller, name='ajustar_estoque'),
@@ -46,5 +50,6 @@ urlpatterns = [
         template_name='registration/login.html',
         authentication_form=LoginForm,
     ), name='login_cliente'),
+    path('login/google/', login_google_controller, name='login_google'),
     path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
 ]

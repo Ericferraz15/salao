@@ -50,7 +50,9 @@
                 
                 <button type="submit" class="btn-hero btn-primary w-100 mt-20">Entrar <i class="fas fa-sign-in-alt" style="margin-left: 8px;"></i></button>
             </form>
-            
+
+            {% include 'registration/_google_login.html' %}
+
             <div class="auth-footer">
                 <p>Ainda não tem uma conta? <a href="{% url 'cadastro_cliente' %}">Cadastre-se aqui</a>.</p>
             </div>

@@ -709,7 +709,9 @@ class DashboardAdminCadastrosTests(_BaseAgenda):
         self.assertEqual(resp.status_code, 302)
         self.assertEqual(Servico.objects.count(), n + 1)
 
-    def test_add_funcionario_cria_staff(self) -> None:
+    def test_add_funcionario_cria_usuario_sem_staff(self) -> None:
+        """Profissional novo NÃO é admin: entra no painel próprio via
+        is_funcionario, sem is_staff (papel separado do da dona)."""
         resp = self.http.post(reverse('dashboard_admin'), {
             'add_funcionario': '1', 'first_name': 'Ana', 'last_name': 'Paula',
             'email': 'ana.nova@t.com', 'celular': '12999990000',
@@ -718,7 +720,8 @@ class DashboardAdminCadastrosTests(_BaseAgenda):
         self.assertEqual(resp.status_code, 302)
         u = Usuario.objects.filter(email='ana.nova@t.com').first()
         self.assertIsNotNone(u)
-        self.assertTrue(u.is_staff)
+        self.assertFalse(u.is_staff)
+        self.assertTrue(u.is_funcionario)
         self.assertTrue(Funcionario.objects.filter(usuario=u).exists())
 
     def test_add_funcionario_email_duplicado_recusado(self) -> None:
@@ -1286,3 +1289,129 @@ class ServicoFormTests(TestCase):
         form = ServicoForm(data=self._dados(preco='-10.00'))
         self.assertFalse(form.is_valid())
         self.assertIn('preco', form.errors)
+
+
+class PaginasLegaisTests(TestCase):
+    """Termos de Uso e Política de Privacidade: públicas e linkadas no rodapé."""
+
+    def test_termos_e_privacidade_abrem_sem_login(self) -> None:
+        http = HttpClient()
+        resp = http.get(reverse('termos'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Termos de Uso')
+        resp = http.get(reverse('privacidade'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Lei Geral de Proteção de Dados')
+
+    def test_rodape_linka_as_paginas(self) -> None:
+        resp = HttpClient().get(reverse('home'))
+        self.assertContains(resp, reverse('termos'))
+        self.assertContains(resp, reverse('privacidade'))
+
+
+@override_settings(GOOGLE_OAUTH_CLIENT_ID='meu-client-id.apps.googleusercontent.com')
+class LoginGoogleTests(TestCase):
+    """/login/google/ — o botão do Google cria a conta ou entra na existente.
+
+    A verificação da credencial junto ao Google é mockada: o que testamos
+    aqui é o NOSSO lado (criação de conta, sessão, redirecionamentos e as
+    recusas de segurança), não a criptografia do Google.
+    """
+
+    ALVO = 'gestao.services.loginGoogleService.id_token.verify_oauth2_token'
+
+    def _payload(self, **over):
+        dados = {
+            'email': 'gclien@gmail.com', 'email_verified': True,
+            'given_name': 'Gabi', 'family_name': 'Cliente',
+        }
+        dados.update(over)
+        return dados
+
+    def _post(self, payload, **post_extra):
+        http = HttpClient()
+        with patch(self.ALVO, return_value=payload):
+            return http.post(
+                reverse('login_google'),
+                {'credential': 'jwt-de-mentira', **post_extra},
+                follow=True,
+            )
+
+    def test_conta_nova_criada_logada_e_no_dashboard(self) -> None:
+        resp = self._post(self._payload())
+        self.assertEqual(resp.request['PATH_INFO'], reverse('dashboard_cliente'))
+        usuario = Usuario.objects.get(email='gclien@gmail.com')
+        self.assertEqual(usuario.username, 'gclien@gmail.com')
+        self.assertEqual(usuario.first_name, 'Gabi')
+        self.assertFalse(usuario.has_usable_password())
+        self.assertTrue(ClienteProfile.objects.filter(usuario=usuario).exists())
+        msgs = [str(m).lower() for m in resp.context['messages']]
+        self.assertTrue(any('bem-vindo' in m for m in msgs), msgs)
+
+    def test_email_ja_cadastrado_entra_na_conta_existente(self) -> None:
+        existente = Usuario.objects.create_user(
+            username='ja@gmail.com', email='ja@gmail.com',
+            password='Senha@123', first_name='Já', celular='11955550000',
+        )
+        ClienteProfile.objects.create(usuario=existente)
+        resp = self._post(self._payload(email='JA@gmail.com'))  # maiúsculas não duplicam
+        self.assertEqual(Usuario.objects.filter(email__iexact='ja@gmail.com').count(), 1)
+        self.assertEqual(int(resp.context['user'].pk), existente.pk)
+        self.assertEqual(resp.request['PATH_INFO'], reverse('home'))
+
+    def test_respeita_next_do_proprio_site(self) -> None:
+        usuario = Usuario.objects.create_user(
+            username='vf@gmail.com', email='vf@gmail.com', password='Senha@123',
+        )
+        # Sem o perfil, a tela de agendar devolveria a cliente para a home
+        ClienteProfile.objects.create(usuario=usuario)
+        resp = self._post(self._payload(email='vf@gmail.com'),
+                          next=reverse('criar_agendamento'))
+        self.assertEqual(resp.request['PATH_INFO'], reverse('criar_agendamento'))
+
+    def test_next_externo_e_ignorado(self) -> None:
+        Usuario.objects.create_user(
+            username='vf2@gmail.com', email='vf2@gmail.com', password='Senha@123',
+        )
+        resp = self._post(self._payload(email='vf2@gmail.com'),
+                          next='https://site-malicioso.com/rouba-sessao')
+        self.assertEqual(resp.request['PATH_INFO'], reverse('home'))
+
+    def test_email_nao_verificado_e_recusado(self) -> None:
+        resp = self._post(self._payload(email_verified=False))
+        self.assertEqual(resp.request['PATH_INFO'], reverse('login_cliente'))
+        self.assertFalse(resp.context['user'].is_authenticated)
+        self.assertFalse(Usuario.objects.filter(email='gclien@gmail.com').exists())
+
+    def test_credencial_invalida_e_recusada(self) -> None:
+        http = HttpClient()
+        with patch(self.ALVO, side_effect=ValueError('token inválido')):
+            resp = http.post(reverse('login_google'),
+                             {'credential': 'jwt-adulterado'}, follow=True)
+        self.assertEqual(resp.request['PATH_INFO'], reverse('login_cliente'))
+        self.assertFalse(resp.context['user'].is_authenticated)
+
+    def test_conta_desativada_nao_entra(self) -> None:
+        Usuario.objects.create_user(
+            username='off@gmail.com', email='off@gmail.com',
+            password='Senha@123', is_active=False,
+        )
+        resp = self._post(self._payload(email='off@gmail.com'))
+        self.assertEqual(resp.request['PATH_INFO'], reverse('login_cliente'))
+        self.assertFalse(resp.context['user'].is_authenticated)
+
+    @override_settings(GOOGLE_OAUTH_CLIENT_ID='')
+    def test_sem_client_id_post_e_recusado_e_botao_some(self) -> None:
+        # POST montado à mão não passa...
+        resp = self._post(self._payload())
+        self.assertFalse(resp.context['user'].is_authenticated)
+        # ...e a tela de login nem mostra o botão.
+        resp = HttpClient().get(reverse('login_cliente'))
+        self.assertNotContains(resp, 'g_id_signin')
+
+    def test_botao_aparece_no_login_e_no_cadastro(self) -> None:
+        http = HttpClient()
+        for rota in ('login_cliente', 'cadastro_cliente'):
+            resp = http.get(reverse(rota))
+            self.assertContains(resp, 'g_id_signin')
+            self.assertContains(resp, 'meu-client-id.apps.googleusercontent.com')

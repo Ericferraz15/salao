@@ -1,0 +1,43 @@
+{% comment %}
+_google_login.html — botão "Entrar com o Google" (incluído no login e no cadastro).
+
+Só aparece se GOOGLE_OAUTH_CLIENT_ID estiver configurado no .env (a
+variável chega aqui pelo context processor gestao/context_processors.py).
+
+Como funciona: o script oficial do Google desenha o botão dentro da div
+.g_id_signin. Quando a cliente escolhe a conta na janelinha, o Google
+chama enviarCredencialGoogle(), que copia a credencial para o formulário
+escondido e o envia para /login/google/ — lá o servidor valida tudo e
+cria a conta (ou só entra, se o e-mail já existir).
+{% endcomment %}
+{% if GOOGLE_OAUTH_CLIENT_ID %}
+    <div class="divisor-ou"><span>ou</span></div>
+
+    <form id="form-login-google" method="post" action="{% url 'login_google' %}">
+        {% csrf_token %}
+        <input type="hidden" name="credential" id="credencial-google">
+        <input type="hidden" name="next" value="{{ next|default:'' }}">
+    </form>
+
+    <div id="g_id_onload"
+         data-client_id="{{ GOOGLE_OAUTH_CLIENT_ID }}"
+         data-callback="enviarCredencialGoogle"
+         data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin botao-google"
+         data-type="standard"
+         data-theme="outline"
+         data-text="continue_with"
+         data-shape="pill"
+         data-size="large"
+         data-locale="pt_BR">
+    </div>
+
+    <script>
+        function enviarCredencialGoogle(resposta) {
+            document.getElementById('credencial-google').value = resposta.credential;
+            document.getElementById('form-login-google').submit();
+        }
+    </script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+{% endif %}

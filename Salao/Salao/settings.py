@@ -21,6 +21,17 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
+# Origens confiáveis para formulários (obrigatório com domínio + HTTPS).
+# O Django 4+ exige a origem COMPLETA (com https://) para aceitar POSTs
+# vindos do site em produção — sem isto, todo formulário falha com
+# "CSRF verification failed" assim que o site sai do localhost.
+# Ex.: DJANGO_CSRF_TRUSTED_ORIGINS=https://studioeduardaferraz.com.br
+CSRF_TRUSTED_ORIGINS = [
+    origem.strip()
+    for origem in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
+    if origem.strip()
+]
+
 # ─── APLICAÇÕES ───────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -55,6 +66,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # Deixa o client_id do Google disponível em todos os templates
+                # (o botão "Entrar com o Google" das telas de login e cadastro).
+                'gestao.context_processors.google_client_id',
             ],
         },
     },
@@ -121,6 +135,13 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 if not DEBUG:
     STORAGES = {
+        # O storage 'default' (uploads de fotos) precisa ser redeclarado:
+        # definir STORAGES substitui o dicionário INTEIRO do Django, não
+        # só a chave 'staticfiles' — sem esta linha, qualquer upload em
+        # produção quebra com "Could not find config for 'default'".
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
         'staticfiles': {
             'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
         },
@@ -138,6 +159,18 @@ LOGIN_URL = 'login_cliente'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 
+# ─── LOGIN COM GOOGLE ─────────────────────────────────────────────────────────
+# Client ID OAuth criado no Google Cloud Console (passo a passo no
+# .env.example). Vazio = o botão "Entrar com o Google" não aparece e o
+# site segue funcionando normalmente só com e-mail e senha.
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '')
+
+# O Django manda o header COOP como 'same-origin' por padrão, o que BLOQUEIA
+# a janelinha de escolha de conta do Google (ela precisa conversar com a
+# página que a abriu). 'same-origin-allow-popups' mantém a proteção contra
+# janelas de outros sites e permite os popups que o próprio site abrir.
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
+
 # ─── SEGURANÇA HTTPS (opcional) ───────────────────────────────────────────────
 # Ligue com DJANGO_HTTPS=1 SOMENTE quando o site estiver atrás de HTTPS de
 # verdade (domínio com certificado). Antes isso era automático com
@@ -145,6 +178,14 @@ LOGOUT_REDIRECT_URL = 'home'
 # cookies "Secure" impedem o login e SECURE_SSL_REDIRECT manda todo mundo
 # para um https que não existe.
 if os.environ.get('DJANGO_HTTPS', '') == '1':
+    # Em produção o HTTPS termina no proxy (Caddy): o certificado fica lá
+    # e o gunicorn recebe HTTP puro pela rede interna do Docker. Este
+    # header é como o proxy avisa "essa requisição chegou por https" —
+    # sem ele o request.is_secure() devolve False e o SECURE_SSL_REDIRECT
+    # entra em loop infinito de redirecionamento. Só é seguro confiar no
+    # header porque o Caddy SEMPRE o sobrescreve; nunca ligue DJANGO_HTTPS
+    # com o gunicorn exposto direto na internet.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000

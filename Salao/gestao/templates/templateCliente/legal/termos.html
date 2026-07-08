@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Termos de Uso - Studio Eduarda Ferraz{% endblock %}
+
+{% block content %}
+<div class="pagina-legal">
+    <div class="container">
+        <h1>Termos de Uso</h1>
+        <p class="legal-atualizacao">Última atualização: julho de 2026</p>
+
+        <h2>1. O que é este site</h2>
+        <p>
+            Este site é o canal oficial de agendamento do <strong>Studio Eduarda
+            Ferraz</strong>. Por ele você conhece os serviços, cria sua conta e
+            reserva horários com as profissionais do estúdio.
+        </p>
+
+        <h2>2. Sua conta</h2>
+        <p>
+            Para agendar é preciso ter uma conta, criada com e-mail e senha ou
+            com o botão "Entrar com o Google". Os dados informados devem ser
+            verdadeiros — o celular, em especial, é como o estúdio confirma o
+            seu horário. A conta é pessoal; mantenha sua senha em segredo.
+        </p>
+
+        <h2>3. Agendamentos, cancelamentos e faltas</h2>
+        <p>
+            O horário reservado fica <strong>pendente</strong> até a confirmação
+            do estúdio. Você pode cancelar um agendamento a qualquer momento pela
+            área "Meus Agendamentos" — por gentileza, cancele com antecedência
+            para liberar o horário para outra cliente. Faltas sem aviso podem ser
+            registradas e consideradas em agendamentos futuros.
+        </p>
+
+        <h2>4. Preços</h2>
+        <p>
+            Os preços exibidos na vitrine valem no momento do agendamento e ficam
+            registrados na sua reserva. Promoções e ajustes de tabela não alteram
+            horários já marcados.
+        </p>
+
+        <h2>5. Uso adequado</h2>
+        <p>
+            É proibido usar o site para criar contas falsas, reservar horários em
+            nome de terceiros sem autorização ou de má-fé (reservas em massa,
+            tentativa de fraude). Contas com esse comportamento podem ser
+            desativadas.
+        </p>
+
+        <h2>6. Dúvidas</h2>
+        <p>
+            Qualquer dúvida sobre estes termos pode ser tratada diretamente com o
+            estúdio pelos contatos da <a href="{% url 'home' %}#contact">página
+            inicial</a>.
+        </p>
+    </div>
+</div>
+{% endblock %}

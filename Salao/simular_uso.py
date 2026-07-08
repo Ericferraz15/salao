@@ -331,8 +331,10 @@ def fluxo_admin():
     nova = Funcionario.objects.filter(usuario__email='patricia@sim.salao').first()
     checa('POST add_funcionario cria profissional (302)',
           resp.status_code == 302 and Funcionario.objects.count() == qtd_func_antes + 1)
-    checa('Novo funcionário recebe is_staff=True',
-          nova is not None and nova.usuario.is_staff)
+    # Profissional NÃO é admin (papéis separados): entra no painel próprio
+    # via is_funcionario, sem is_staff — mesma garantia dos testes.
+    checa('Novo funcionário entra como equipe, sem virar admin',
+          nova is not None and not nova.usuario.is_staff and nova.usuario.is_funcionario)
 
     # 4.4 Tenta adicionar funcionário com e-mail duplicado (deve recusar)
     qtd_func = Funcionario.objects.count()
